@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  profile   Profile?
+  posts     Post[]
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identity        String   // e.g. "Blogger"
+  targetPlatforms String   // comma-separated list of platforms e.g. "X,LinkedIn"
+  niche           String   // e.g. "Tech"
+  tone            String?  // e.g. "Professional"
+}
+
+model Trend {
+  id           String   @id @default(uuid())
+  platform     String   // e.g. "X"
+  headline     String
+  discoveredAt DateTime @default(now())
+  posts        Post[]
+}
+
+model Post {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trendId        String?
+  trend          Trend?   @relation(fields: [trendId], references: [id])
+  platformTarget String
+  content        String
+  status         String   @default("Draft") // Draft, Published
+  createdAt      DateTime @default(now())
+}
