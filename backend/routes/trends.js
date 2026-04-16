@@ -1,76 +1,73 @@
 import express from 'express';
+import Parser from 'rss-parser';
 import prisma from '../lib/prisma.js';
-import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
+const parser = new Parser();
 
-// Mock tech trends grouped by platform
-const MOCK_TRENDS = {
-  X: [
-    { headline: 'OpenAI launches GPT-5 with real-time web browsing', platform: 'X' },
-    { headline: 'Apple announces on-device AI chip for iPhone 17', platform: 'X' },
-    { headline: 'Google DeepMind beats human experts in scientific reasoning', platform: 'X' },
-  ],
-  LinkedIn: [
-    { headline: 'How AI agents are replacing junior dev roles in 2025', platform: 'LinkedIn' },
-    { headline: 'Meta open-sources its newest multimodal AI model', platform: 'LinkedIn' },
-    { headline: '10 tech startups that raised over $100M this week', platform: 'LinkedIn' },
-  ],
-  Instagram: [
-    { headline: 'Behind the scenes: Building a SaaS in 30 days', platform: 'Instagram' },
-    { headline: 'The viral "vibe coding" trend sweeping developers', platform: 'Instagram' },
-  ],
-  Facebook: [
-    { headline: 'Tech myth-busting: Is AI really taking all the jobs?', platform: 'Facebook' },
-    { headline: 'Best free AI tools every blogger should use in 2025', platform: 'Facebook' },
-  ],
-  General: [
-    { headline: 'The rise of agentic AI and what it means for the internet', platform: 'General' },
-    { headline: 'Nvidia hits $4 trillion market cap fuelled by AI demand', platform: 'General' },
-  ],
-};
+const RSS_FEEDS = [
+  'https://techcrunch.com/feed/',
+  'https://www.theverge.com/rss/index.xml',
+  'https://hnrss.org/frontpage'
+];
 
-// GET /api/trends - returns trending topics for user's platforms
-router.get('/', verifyToken, async (req, res) => {
+async function seedRealTrends() {
+  console.log('Fetching real-time trends from RSS feeds...');
   try {
-    const profile = await prisma.profile.findUnique({ where: { userId: req.userId } });
-    if (!profile) {
-      return res.status(404).json({ error: 'Complete your profile first.' });
+    const allItems = [];
+    
+    for (const url of RSS_FEEDS) {
+      try {
+        const feed = await parser.parseURL(url);
+        const source = url.includes('techcrunch') ? 'TechCrunch' : 
+                       url.includes('theverge') ? 'TheVerge' : 'HackerNews';
+        
+        feed.items.slice(0, 5).forEach(item => {
+          allItems.push({
+            headline: item.title,
+            description: item.contentSnippet || item.content || '',
+            platform: source,
+            metadata: JSON.stringify({ link: item.link, date: item.pubDate })
+          });
+        });
+      } catch (err) {
+        console.error(`Failed to fetch ${url}:`, err.message);
+      }
     }
 
-    const platforms = profile.targetPlatforms.split(',');
-    const now = new Date();
+    // Clean old trends and insert fresh ones
+    // Note: In production we'd use a upsert based on link to avoid deletion
+    await prisma.trend.deleteMany({});
+    
+    for (const trend of allItems) {
+      await prisma.trend.create({ data: trend });
+    }
+    
+    console.log(`Successfully seeded ${allItems.length} real trends.`);
+  } catch (error) {
+    console.error('Trend seeding failed:', error);
+  }
+}
 
-    // Save fresh mock trends to the database (or fetch existing ones for today)
-    const todayStart = new Date(now.setHours(0, 0, 0, 0));
-
-    const existingTrends = await prisma.trend.findMany({
-      where: { discoveredAt: { gte: todayStart } },
+// GET /api/trends
+router.get('/', async (req, res) => {
+  try {
+    let trends = await prisma.trend.findMany({
+      orderBy: { createdAt: 'desc' }
     });
 
-    let trends = existingTrends;
-
-    if (existingTrends.length === 0) {
-      // Seed mock trends for today
-      const toCreate = [];
-      for (const platform of [...platforms, 'General']) {
-        const platformTrends = MOCK_TRENDS[platform] || [];
-        platformTrends.forEach((t) => toCreate.push(t));
-      }
-
-      await prisma.trend.createMany({ data: toCreate });
-      trends = await prisma.trend.findMany({ where: { discoveredAt: { gte: todayStart } } });
+    // If no trends or they are older than 1 hour, refresh them
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (trends.length === 0 || trends[0].createdAt < oneHourAgo) {
+      await seedRealTrends();
+      trends = await prisma.trend.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
     }
 
-    // Filter to user's platforms + general
-    const filtered = trends.filter(
-      (t) => platforms.includes(t.platform) || t.platform === 'General'
-    );
-
-    res.json({ trends: filtered, fetchedAt: new Date().toISOString() });
+    res.json({ trends });
   } catch (error) {
-    console.error('Trends error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Failed to fetch trends.' });
   }
 });
 
