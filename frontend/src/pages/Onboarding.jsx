@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Globe, MessageSquare, ArrowRight, Check } from 'lucide-react';
+import { User, Globe, MessageSquare, ArrowRight, Check, Zap } from 'lucide-react';
 import api from '../lib/api';
 
 const Onboarding = ({ user, setUser }) => {
@@ -41,27 +41,28 @@ const Onboarding = ({ user, setUser }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-radial from-primary/10 via-dark to-dark">
-      <div className="max-w-xl w-full">
-        <div className="flex justify-center gap-2 mb-8">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-surface overflow-hidden relative">
+      {/* Background Decor */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
+
+      <div className="max-w-xl w-full relative z-10">
+        <div className="flex justify-center gap-3 mb-12">
           {[1, 2, 3].map(i => (
-            <div key={i} className={`h-1.5 w-12 rounded-full transition-all duration-500 ${step >= i ? 'bg-primary shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-white/10'}`} />
+            <div key={i} className={`h-1.5 w-12 rounded-full transition-all duration-700 ${step >= i ? 'bg-primary shadow-[0_0_15px_#bef264]' : 'bg-white/5'}`} />
           ))}
         </div>
 
-        <motion.div layout className="glass p-10 relative overflow-hidden">
+        <motion.div layout className="glass p-10 md:p-12 border-white/5 bg-surface/60 backdrop-blur-3xl shadow-2xl">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div 
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                key="step1" init={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="space-y-8"
               >
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Tell us about yourself</h2>
-                  <p className="text-slate-400">What best describes your role in content creation?</p>
+                <div className="space-y-2">
+                  <div className="text-primary font-bold uppercase tracking-[0.3em] text-[9px] mb-2">Setup Protocol 01</div>
+                  <h2 className="text-4xl font-black text-white uppercase tracking-tight">Identity</h2>
+                  <p className="text-slate-500 font-medium text-sm">Select your primary role signature.</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
@@ -69,7 +70,7 @@ const Onboarding = ({ user, setUser }) => {
                     <button
                       key={id}
                       onClick={() => setData({ ...data, identity: id })}
-                      className={`p-4 rounded-xl text-left border transition-all ${data.identity === id ? 'border-primary bg-primary/10 text-white' : 'border-white/5 bg-white/5 text-slate-400 hover:border-white/20'}`}
+                      className={`p-5 rounded-xl text-left border transition-all font-bold text-xs uppercase tracking-widest ${data.identity === id ? 'border-primary bg-primary/5 text-primary' : 'border-white/5 bg-white/[0.02] text-slate-500 hover:border-white/10'}`}
                     >
                       {id}
                     </button>
@@ -79,7 +80,7 @@ const Onboarding = ({ user, setUser }) => {
                 <button 
                   disabled={!data.identity}
                   onClick={() => setStep(2)}
-                  className="glow-btn w-full flex items-center justify-center gap-2 !mt-12 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="glow-btn w-full flex items-center justify-center gap-3 py-5 !mt-10 disabled:opacity-20 text-[10px] font-bold uppercase tracking-[0.3em]"
                 >
                   Continue <ArrowRight size={18} />
                 </button>
@@ -88,40 +89,38 @@ const Onboarding = ({ user, setUser }) => {
 
             {step === 2 && (
               <motion.div 
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                key="step2" init={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="space-y-8"
               >
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Select your platforms</h2>
-                  <p className="text-slate-400">Where do you usually publish your content?</p>
+                <div className="space-y-2">
+                  <div className="text-primary font-bold uppercase tracking-[0.3em] text-[9px] mb-2">Setup Protocol 02</div>
+                  <h2 className="text-4xl font-black text-white uppercase tracking-tight">Nodes</h2>
+                  <p className="text-slate-500 font-medium text-sm">Target transmission endpoints.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 text-center">
                   {platforms.map(p => (
                     <button
                       key={p}
                       onClick={() => togglePlatform(p)}
-                      className={`p-6 rounded-2xl flex flex-col items-center gap-3 border transition-all ${data.targetPlatforms.includes(p) ? 'border-secondary bg-secondary/10 text-white' : 'border-white/5 bg-white/5 text-slate-400 hover:border-white/20'}`}
+                      className={`p-6 rounded-2xl flex flex-col items-center gap-3 border transition-all ${data.targetPlatforms.includes(p) ? 'border-primary bg-primary/5 text-primary' : 'border-white/5 bg-white/[0.02] text-slate-500'}`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${data.targetPlatforms.includes(p) ? 'bg-secondary text-white' : 'bg-white/10'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${data.targetPlatforms.includes(p) ? 'bg-primary text-black shadow-[0_0_20px_#bef264]' : 'bg-white/5'}`}>
                         {data.targetPlatforms.includes(p) ? <Check size={20} /> : < Globe size={20} />}
                       </div>
-                      <span className="font-bold">{p}</span>
+                      <span className="font-bold uppercase tracking-[0.1em] text-[10px]">{p}</span>
                     </button>
                   ))}
                 </div>
 
-                <div className="flex gap-4 !mt-12">
-                  <button onClick={() => setStep(1)} className="px-6 py-3 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5">Back</button>
+                <div className="flex gap-4 !mt-10">
+                  <button onClick={() => setStep(1)} className="px-8 py-4 rounded-xl border border-white/5 text-slate-600 font-bold uppercase text-[9px] tracking-widest">Back</button>
                   <button 
                     disabled={data.targetPlatforms.length === 0}
                     onClick={() => setStep(3)}
-                    className="glow-btn flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="glow-btn flex-1 flex items-center justify-center gap-3 disabled:opacity-20 text-[10px] font-bold uppercase tracking-[0.3em]"
                   >
-                    Continue <ArrowRight size={18} />
+                    Sync <ArrowRight size={18} />
                   </button>
                 </div>
               </motion.div>
@@ -129,52 +128,48 @@ const Onboarding = ({ user, setUser }) => {
 
             {step === 3 && (
               <motion.div 
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                key="step3" init={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="space-y-8"
               >
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Refine your niche</h2>
-                  <p className="text-slate-400">What specific topics do you cover? (e.g. AI, SaaS, Crypto)</p>
+                <div className="space-y-2">
+                  <div className="text-primary font-bold uppercase tracking-[0.3em] text-[9px] mb-2">Setup Protocol 03</div>
+                  <h2 className="text-4xl font-black text-white uppercase tracking-tight">Focus</h2>
+                  <p className="text-slate-500 font-medium text-sm">Market niche and voice calibration.</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Your Niche</label>
+                    <label className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-600 ml-1">Market Sector</label>
                     <input 
-                      type="text"
-                      placeholder="e.g. AI and Software Development"
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-primary/50"
+                      type="text" placeholder="E.G. FINTECH_AI"
+                      className="w-full p-5 bg-white/[0.02] border border-white/5 rounded-xl outline-none focus:border-primary/50 text-white font-bold uppercase tracking-widest text-sm"
                       value={data.niche}
                       onChange={(e) => setData({...data, niche: e.target.value})}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Preferred Tone</label>
+                    <label className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-600 ml-1">Output Tone</label>
                     <select 
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-primary/50"
+                      className="w-full p-5 bg-[#0c0c0c] border border-white/5 rounded-xl outline-none focus:border-primary/50 text-white font-bold uppercase tracking-widest text-sm appearance-none cursor-pointer"
                       value={data.tone}
                       onChange={(e) => setData({...data, tone: e.target.value})}
                     >
-                      <option className="bg-dark">Professional</option>
-                      <option className="bg-dark">Quirky & Fun</option>
-                      <option className="bg-dark">Deeply Technical</option>
-                      <option className="bg-dark">Educational</option>
+                      <option value="Professional">Professional</option>
+                      <option value="Quirky & Fun">Industrial</option>
+                      <option value="Deeply Technical">Technical</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="flex gap-4 !mt-12">
-                  <button onClick={() => setStep(2)} className="px-6 py-3 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5">Back</button>
+                <div className="flex gap-4 !mt-10">
+                  <button onClick={() => setStep(2)} className="px-8 py-4 rounded-xl border border-white/5 text-slate-600 font-bold uppercase text-[9px] tracking-widest">Back</button>
                   <button 
                     disabled={!data.niche || loading}
                     onClick={handleFinish}
-                    className="glow-btn flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="glow-btn flex-1 flex items-center justify-center gap-3 disabled:opacity-20 text-[10px] font-bold uppercase tracking-[0.3em]"
                   >
-                    {loading ? 'Finalizing...' : 'Start My Journey'} <Check size={18} />
+                    {loading ? 'Processing...' : 'Complete Init'} <Check size={18} />
                   </button>
                 </div>
               </motion.div>
