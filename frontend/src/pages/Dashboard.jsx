@@ -138,21 +138,20 @@ const Dashboard = ({ user, setUser }) => {
     }
   };
 
-  // Filter posts for the specific studio trend if one is active
   const studioPosts = useMemo(() => {
     if (studioTrendId) {
       return posts.filter(p => p.trendId === studioTrendId);
     }
-    return posts; // Fallback to all drafts if opened normally
+    return posts;
   }, [posts, studioTrendId]);
 
   return (
     <div className="min-h-screen flex bg-surface text-slate-400 font-inter selection:bg-primary/40 selection:text-black antialiased">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-72 border-r border-white/5 flex-col p-8 sticky top-0 h-screen z-40 bg-surface">
-        <div className="flex items-center gap-3 font-extrabold text-2xl text-primary mb-16 tracking-tighter">
-          <Zap fill="currentColor" size={24} /> 
-          <span>Watchmann</span>
+        <div className="flex items-center gap-4 font-extrabold text-2xl text-primary mb-16 tracking-tighter cursor-pointer group">
+          <img src="/logo.png" alt="Watchmann Infinity Logo" className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" /> 
+          <span className="group-hover:tracking-widest transition-all duration-700">Watchmann</span>
         </div>
         
         <nav className="flex-1 space-y-3">
@@ -231,7 +230,7 @@ const Dashboard = ({ user, setUser }) => {
                   </div>
                   <div className="space-y-4">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Market Domain</label>
-                    <input value={settingsData.niche} onChange={e => setSettingsData({...settingsData, niche: e.target.value})} className="settings-input" />
+                    <input value={settingsData.identity} onChange={e => setSettingsData({...settingsData, identity: e.target.value})} className="settings-input" />
                   </div>
                   <div className="space-y-4">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Transmission Tone</label>
@@ -309,7 +308,9 @@ const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
     <motion.div initial={{ y: '20px', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '20px', opacity: 0 }} className="fixed inset-4 md:inset-10 lg:inset-16 bg-surface border border-white/5 z-[90] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
       <header className="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-surface">
         <div className="flex items-center gap-6">
-           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><Sparkles size={24} /></div>
+           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+             <img src="/logo.png" alt="W/M" className="w-8 h-8" />
+           </div>
            <div className="space-y-1">
              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Strategy Studio</h2>
              <p className="text-[9px] text-primary/50 font-bold uppercase tracking-[0.4em]">Active Node Calibration</p>
@@ -318,7 +319,6 @@ const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
         <button onClick={onClose} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-slate-500"><X size={24} /></button>
       </header>
       
-      {/* GRID OVERHAUL FOR VISUAL CONSISTENCY */}
       <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {posts.map((post, i) => (
@@ -348,12 +348,6 @@ const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
               </motion.div>
             ))}
           </div>
-          {posts.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-slate-700 font-bold uppercase tracking-widest text-xs py-40">
-              <Zap size={48} className="mb-6 opacity-20" />
-              Empty Satellite Hub
-            </div>
-          )}
       </div>
     </motion.div>
   </>

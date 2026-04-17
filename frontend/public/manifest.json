@@ -5,16 +5,32 @@
     {
       "src": "/icons/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#a855f7",
-  "background_color": "#050505"
+  "theme_color": "#bef264",
+  "background_color": "#080808",
+  "orientation": "portrait",
+  "description": "Real-time viral content strategy engine for elite creators.",
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Strategy Studio",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

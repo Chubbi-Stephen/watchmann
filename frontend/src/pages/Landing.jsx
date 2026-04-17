@@ -15,8 +15,8 @@ const Landing = () => {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 px-6 py-6 transition-all">
         <div className="glass container mx-auto flex justify-between items-center px-8 py-4 border border-white/5 shadow-2xl bg-surface/40 backdrop-blur-3xl">
-          <div className="flex items-center gap-3 font-extrabold text-2xl text-primary tracking-tighter">
-            <Zap fill="currentColor" size={24} /> Watchmann
+          <div className="flex items-center gap-4 font-extrabold text-2xl text-primary tracking-tighter group cursor-pointer">
+            <img src="/logo.png" alt="W/M" className="w-8 h-8 group-hover:rotate-12 transition-transform duration-500" /> Watchmann
           </div>
           <div className="hidden md:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
             <a href="#features" className="hover:text-white transition-colors">Features</a>

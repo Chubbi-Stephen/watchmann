@@ -49,8 +49,8 @@ const Auth = ({ setUser }) => {
         className="glass max-w-lg w-full p-8 md:p-12 relative z-10 shadow-2xl bg-surface/60"
       >
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 font-bold text-xl text-primary mb-6 tracking-tighter">
-            <Zap fill="currentColor" size={20} /> Watchmann
+          <div className="inline-flex items-center gap-4 font-bold text-xl text-primary mb-6 tracking-tighter cursor-pointer group">
+            <img src="/logo.png" alt="W/M" className="w-8 h-8 group-hover:scale-110 transition-all duration-500" /> Watchmann
           </div>
           <h2 className="text-3xl font-black text-white uppercase tracking-tight">
             {isLogin ? 'Access Core' : 'Init System'}
