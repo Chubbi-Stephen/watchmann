@@ -3384,6 +3384,8 @@ export namespace Prisma {
     id: string | null
     platform: string | null
     headline: string | null
+    description: string | null
+    metadata: string | null
     discoveredAt: Date | null
   }
 
@@ -3391,6 +3393,8 @@ export namespace Prisma {
     id: string | null
     platform: string | null
     headline: string | null
+    description: string | null
+    metadata: string | null
     discoveredAt: Date | null
   }
 
@@ -3398,6 +3402,8 @@ export namespace Prisma {
     id: number
     platform: number
     headline: number
+    description: number
+    metadata: number
     discoveredAt: number
     _all: number
   }
@@ -3407,6 +3413,8 @@ export namespace Prisma {
     id?: true
     platform?: true
     headline?: true
+    description?: true
+    metadata?: true
     discoveredAt?: true
   }
 
@@ -3414,6 +3422,8 @@ export namespace Prisma {
     id?: true
     platform?: true
     headline?: true
+    description?: true
+    metadata?: true
     discoveredAt?: true
   }
 
@@ -3421,6 +3431,8 @@ export namespace Prisma {
     id?: true
     platform?: true
     headline?: true
+    description?: true
+    metadata?: true
     discoveredAt?: true
     _all?: true
   }
@@ -3501,6 +3513,8 @@ export namespace Prisma {
     id: string
     platform: string
     headline: string
+    description: string | null
+    metadata: string | null
     discoveredAt: Date
     _count: TrendCountAggregateOutputType | null
     _min: TrendMinAggregateOutputType | null
@@ -3525,6 +3539,8 @@ export namespace Prisma {
     id?: boolean
     platform?: boolean
     headline?: boolean
+    description?: boolean
+    metadata?: boolean
     discoveredAt?: boolean
     posts?: boolean | Trend$postsArgs<ExtArgs>
     _count?: boolean | TrendCountOutputTypeDefaultArgs<ExtArgs>
@@ -3534,6 +3550,8 @@ export namespace Prisma {
     id?: boolean
     platform?: boolean
     headline?: boolean
+    description?: boolean
+    metadata?: boolean
     discoveredAt?: boolean
   }, ExtArgs["result"]["trend"]>
 
@@ -3541,6 +3559,8 @@ export namespace Prisma {
     id?: boolean
     platform?: boolean
     headline?: boolean
+    description?: boolean
+    metadata?: boolean
     discoveredAt?: boolean
   }, ExtArgs["result"]["trend"]>
 
@@ -3548,10 +3568,12 @@ export namespace Prisma {
     id?: boolean
     platform?: boolean
     headline?: boolean
+    description?: boolean
+    metadata?: boolean
     discoveredAt?: boolean
   }
 
-  export type TrendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "platform" | "headline" | "discoveredAt", ExtArgs["result"]["trend"]>
+  export type TrendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "platform" | "headline" | "description" | "metadata" | "discoveredAt", ExtArgs["result"]["trend"]>
   export type TrendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     posts?: boolean | Trend$postsArgs<ExtArgs>
     _count?: boolean | TrendCountOutputTypeDefaultArgs<ExtArgs>
@@ -3568,6 +3590,8 @@ export namespace Prisma {
       id: string
       platform: string
       headline: string
+      description: string | null
+      metadata: string | null
       discoveredAt: Date
     }, ExtArgs["result"]["trend"]>
     composites: {}
@@ -3996,6 +4020,8 @@ export namespace Prisma {
     readonly id: FieldRef<"Trend", 'String'>
     readonly platform: FieldRef<"Trend", 'String'>
     readonly headline: FieldRef<"Trend", 'String'>
+    readonly description: FieldRef<"Trend", 'String'>
+    readonly metadata: FieldRef<"Trend", 'String'>
     readonly discoveredAt: FieldRef<"Trend", 'DateTime'>
   }
     
@@ -5582,6 +5608,8 @@ export namespace Prisma {
     id: 'id',
     platform: 'platform',
     headline: 'headline',
+    description: 'description',
+    metadata: 'metadata',
     discoveredAt: 'discoveredAt'
   };
 
@@ -5771,6 +5799,8 @@ export namespace Prisma {
     id?: StringFilter<"Trend"> | string
     platform?: StringFilter<"Trend"> | string
     headline?: StringFilter<"Trend"> | string
+    description?: StringNullableFilter<"Trend"> | string | null
+    metadata?: StringNullableFilter<"Trend"> | string | null
     discoveredAt?: DateTimeFilter<"Trend"> | Date | string
     posts?: PostListRelationFilter
   }
@@ -5779,6 +5809,8 @@ export namespace Prisma {
     id?: SortOrder
     platform?: SortOrder
     headline?: SortOrder
+    description?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     discoveredAt?: SortOrder
     posts?: PostOrderByRelationAggregateInput
   }
@@ -5790,6 +5822,8 @@ export namespace Prisma {
     NOT?: TrendWhereInput | TrendWhereInput[]
     platform?: StringFilter<"Trend"> | string
     headline?: StringFilter<"Trend"> | string
+    description?: StringNullableFilter<"Trend"> | string | null
+    metadata?: StringNullableFilter<"Trend"> | string | null
     discoveredAt?: DateTimeFilter<"Trend"> | Date | string
     posts?: PostListRelationFilter
   }, "id">
@@ -5798,6 +5832,8 @@ export namespace Prisma {
     id?: SortOrder
     platform?: SortOrder
     headline?: SortOrder
+    description?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     discoveredAt?: SortOrder
     _count?: TrendCountOrderByAggregateInput
     _max?: TrendMaxOrderByAggregateInput
@@ -5811,6 +5847,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Trend"> | string
     platform?: StringWithAggregatesFilter<"Trend"> | string
     headline?: StringWithAggregatesFilter<"Trend"> | string
+    description?: StringNullableWithAggregatesFilter<"Trend"> | string | null
+    metadata?: StringNullableWithAggregatesFilter<"Trend"> | string | null
     discoveredAt?: DateTimeWithAggregatesFilter<"Trend"> | Date | string
   }
 
@@ -6012,6 +6050,8 @@ export namespace Prisma {
     id?: string
     platform: string
     headline: string
+    description?: string | null
+    metadata?: string | null
     discoveredAt?: Date | string
     posts?: PostCreateNestedManyWithoutTrendInput
   }
@@ -6020,6 +6060,8 @@ export namespace Prisma {
     id?: string
     platform: string
     headline: string
+    description?: string | null
+    metadata?: string | null
     discoveredAt?: Date | string
     posts?: PostUncheckedCreateNestedManyWithoutTrendInput
   }
@@ -6028,6 +6070,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     posts?: PostUpdateManyWithoutTrendNestedInput
   }
@@ -6036,6 +6080,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     posts?: PostUncheckedUpdateManyWithoutTrendNestedInput
   }
@@ -6044,6 +6090,8 @@ export namespace Prisma {
     id?: string
     platform: string
     headline: string
+    description?: string | null
+    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6051,6 +6099,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6058,6 +6108,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6296,6 +6348,8 @@ export namespace Prisma {
     id?: SortOrder
     platform?: SortOrder
     headline?: SortOrder
+    description?: SortOrder
+    metadata?: SortOrder
     discoveredAt?: SortOrder
   }
 
@@ -6303,6 +6357,8 @@ export namespace Prisma {
     id?: SortOrder
     platform?: SortOrder
     headline?: SortOrder
+    description?: SortOrder
+    metadata?: SortOrder
     discoveredAt?: SortOrder
   }
 
@@ -6310,6 +6366,8 @@ export namespace Prisma {
     id?: SortOrder
     platform?: SortOrder
     headline?: SortOrder
+    description?: SortOrder
+    metadata?: SortOrder
     discoveredAt?: SortOrder
   }
 
@@ -6855,6 +6913,8 @@ export namespace Prisma {
     id?: string
     platform: string
     headline: string
+    description?: string | null
+    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6862,6 +6922,8 @@ export namespace Prisma {
     id?: string
     platform: string
     headline: string
+    description?: string | null
+    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6914,6 +6976,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6921,6 +6985,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

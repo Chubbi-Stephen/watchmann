@@ -138,6 +138,8 @@ exports.Prisma.TrendScalarFieldEnum = {
   id: 'id',
   platform: 'platform',
   headline: 'headline',
+  description: 'description',
+  metadata: 'metadata',
   discoveredAt: 'discoveredAt'
 };
 

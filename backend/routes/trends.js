@@ -53,15 +53,15 @@ async function seedRealTrends() {
 router.get('/', async (req, res) => {
   try {
     let trends = await prisma.trend.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { discoveredAt: 'desc' }
     });
 
     // If no trends or they are older than 1 hour, refresh them
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    if (trends.length === 0 || trends[0].createdAt < oneHourAgo) {
+    if (trends.length === 0 || trends[0].discoveredAt < oneHourAgo) {
       await seedRealTrends();
       trends = await prisma.trend.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { discoveredAt: 'desc' }
       });
     }
 

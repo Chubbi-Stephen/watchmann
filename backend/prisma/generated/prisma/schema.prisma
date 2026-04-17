@@ -31,6 +31,8 @@ model Trend {
   id           String   @id @default(uuid())
   platform     String // e.g. "X"
   headline     String
+  description  String?
+  metadata     String? // JSON stringified metadata
   discoveredAt DateTime @default(now())
   posts        Post[]
 }
