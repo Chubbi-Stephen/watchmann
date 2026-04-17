@@ -1,10 +1,11 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import { verifyToken } from '../middleware/auth.js';
+import { generateContentStrategy } from '../lib/openai.js';
 
 const router = express.Router();
 
-// Mock AI content generator (placeholder before real API integration)
+// Mock fallback logic preserved for robustness
 const generateMockContent = (headline, platform, identity, tone) => {
   const templates = {
     X: `🚨 Breaking Tech: ${headline}\n\nHere's what this means for you as a tech enthusiast:\n\n1/ This is going to shake things up...\n2/ What you need to know right now\n3/ My take: [Your hot opinion here]\n\nDrop your thoughts 👇 #Tech #AI #Innovation`,
@@ -19,28 +20,52 @@ const generateMockContent = (headline, platform, identity, tone) => {
 
 // POST /api/posts/generate
 router.post('/generate', verifyToken, async (req, res) => {
-  const { trendId } = req.body;
+  const { trendId, identityId } = req.body;
   if (!trendId) return res.status(400).json({ error: 'trendId is required.' });
 
   try {
-    const profile = await prisma.profile.findUnique({ where: { userId: req.userId } });
-    if (!profile) return res.status(404).json({ error: 'Complete profile first.' });
+    // 1. Get Active (or specific) Identity
+    const identity = identityId 
+      ? await prisma.profile.findUnique({ where: { id: identityId, userId: req.userId } })
+      : await prisma.profile.findFirst({ where: { userId: req.userId, isActive: true } });
 
+    if (!identity) return res.status(404).json({ error: 'Identity not found. Establish identity first.' });
+
+    // 2. Resolve Trend Link
     const trend = await prisma.trend.findUnique({ where: { id: trendId } });
-    if (!trend) return res.status(404).json({ error: 'Trend not found.' });
+    if (!trend) return res.status(404).json({ error: 'Trend node unreachable.' });
 
-    const platforms = profile.targetPlatforms.split(',');
+    const platforms = identity.targetPlatforms.split(',');
     const generatedPosts = [];
 
+    // 3. Neural Strategy Generation
     for (const platform of platforms) {
-      const content = generateMockContent(trend.headline, platform, profile.identity, profile.tone);
+      let content = await generateContentStrategy({ 
+        trend, 
+        identity, 
+        tone: identity.tone || 'Professional', 
+        platform 
+      });
+
+      // Fallback if AI fails or key is missing
+      if (!content) {
+        content = generateMockContent(trend.headline, platform, identity.identityRole, identity.tone);
+      }
+
       const post = await prisma.post.create({
-        data: { userId: req.userId, trendId: trend.id, platformTarget: platform, content, status: 'Draft' },
+        data: { 
+          userId: req.userId, 
+          trendId: trend.id, 
+          platformTarget: platform, 
+          content, 
+          status: 'Draft' 
+        },
       });
       generatedPosts.push(post);
     }
-    res.status(201).json({ message: 'Posts generated', posts: generatedPosts });
+    res.status(201).json({ message: 'Neural Sync Complete', posts: generatedPosts });
   } catch (error) {
+    console.error("Meta Generation Failed:", error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -75,13 +100,16 @@ router.get('/all', verifyToken, async (req, res) => {
   }
 });
 
-// PATCH /api/posts/:id/status
-router.patch('/:id/status', verifyToken, async (req, res) => {
+// PATCH /api/posts/:id
+router.patch('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, scheduledFor, content } = req.body;
   try {
-    await prisma.post.updateMany({ where: { id, userId: req.userId }, data: { status } });
-    res.json({ message: 'Status updated' });
+    const updated = await prisma.post.update({ 
+      where: { id, userId: req.userId }, 
+      data: { status, scheduledFor, content } 
+    });
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error.' });
   }

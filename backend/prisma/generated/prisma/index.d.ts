@@ -3,7 +3,7 @@
  * Client
 **/
 
-import * as runtime from './runtime/client.js';
+import * as runtime from './runtime/library.js';
 import $Types = runtime.Types // general types
 import $Public = runtime.Types.Public
 import $Utils = runtime.Types.Utils
@@ -40,19 +40,17 @@ export type Post = $Result.DefaultSelection<Prisma.$PostPayload>
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
- * const prisma = new PrismaClient({
- *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
- * })
+ * const prisma = new PrismaClient()
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
  *
  *
- * Read more in our [docs](https://pris.ly/d/client).
+ * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
  */
 export class PrismaClient<
   ClientOptions extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
-  const U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
+  U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
   ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs
 > {
   [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
@@ -63,19 +61,17 @@ export class PrismaClient<
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
-   * const prisma = new PrismaClient({
-   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
-   * })
+   * const prisma = new PrismaClient()
    * // Fetch zero or more Users
    * const users = await prisma.user.findMany()
    * ```
    *
    *
-   * Read more in our [docs](https://pris.ly/d/client).
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
    */
 
   constructor(optionsArg ?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>);
-  $on<V extends U>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): PrismaClient;
+  $on<V extends U>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): void;
 
   /**
    * Connect with the database
@@ -87,6 +83,13 @@ export class PrismaClient<
    */
   $disconnect(): $Utils.JsPromise<void>;
 
+  /**
+   * Add a middleware
+   * @deprecated since 4.16.0. For new code, prefer client extensions instead.
+   * @see https://pris.ly/d/extensions
+   */
+  $use(cb: Prisma.Middleware): void
+
 /**
    * Executes a prepared raw query and returns the number of affected rows.
    * @example
@@ -94,7 +97,7 @@ export class PrismaClient<
    * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
    * ```
    *
-   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
 
@@ -106,7 +109,7 @@ export class PrismaClient<
    * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
    * ```
    *
-   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
 
@@ -117,7 +120,7 @@ export class PrismaClient<
    * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
    * ```
    *
-   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
 
@@ -129,7 +132,7 @@ export class PrismaClient<
    * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
    * ```
    *
-   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
 
@@ -145,15 +148,16 @@ export class PrismaClient<
    * ])
    * ```
    * 
-   * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
+   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
    */
   $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
   $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
 
-  $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb<ClientOptions>, ExtArgs, $Utils.Call<Prisma.TypeMapCb<ClientOptions>, {
+
+  $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb, ExtArgs, $Utils.Call<Prisma.TypeMapCb, {
     extArgs: ExtArgs
-  }>>
+  }>, ClientOptions>
 
       /**
    * `prisma.user`: Exposes CRUD operations for the **User** model.
@@ -234,6 +238,14 @@ export namespace Prisma {
   export type DecimalJsLike = runtime.DecimalJsLike
 
   /**
+   * Metrics 
+   */
+  export type Metrics = runtime.Metrics
+  export type Metric<T> = runtime.Metric<T>
+  export type MetricHistogram = runtime.MetricHistogram
+  export type MetricHistogramBucket = runtime.MetricHistogramBucket
+
+  /**
   * Extensions
   */
   export import Extension = $Extensions.UserArgs
@@ -244,22 +256,20 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.7.0
-   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+   * Prisma Client JS version: 6.2.1
+   * Query Engine version: 4123509d24aa4dede1e864b46351bf2790323b69
    */
   export type PrismaVersion = {
     client: string
-    engine: string
   }
 
-  export const prismaVersion: PrismaVersion
+  export const prismaVersion: PrismaVersion 
 
   /**
    * Utility Types
    */
 
 
-  export import Bytes = runtime.Bytes
   export import JsonObject = runtime.JsonObject
   export import JsonArray = runtime.JsonArray
   export import JsonValue = runtime.JsonValue
@@ -269,15 +279,15 @@ export namespace Prisma {
 
   /**
    * Types of the values used to represent different kinds of `null` values when working with JSON fields.
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   namespace NullTypes {
     /**
     * Type of `Prisma.DbNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.DbNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class DbNull {
@@ -287,9 +297,9 @@ export namespace Prisma {
 
     /**
     * Type of `Prisma.JsonNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.JsonNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class JsonNull {
@@ -299,9 +309,9 @@ export namespace Prisma {
 
     /**
     * Type of `Prisma.AnyNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.AnyNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class AnyNull {
@@ -312,21 +322,21 @@ export namespace Prisma {
 
   /**
    * Helper for filtering JSON entries that have `null` on the database (empty on the db)
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const DbNull: NullTypes.DbNull
 
   /**
    * Helper for filtering JSON entries that have JSON `null` values (not empty on the db)
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const JsonNull: NullTypes.JsonNull
 
   /**
    * Helper for filtering JSON entries that are `Prisma.DbNull` or `Prisma.JsonNull`
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const AnyNull: NullTypes.AnyNull
@@ -514,7 +524,7 @@ export namespace Prisma {
   type AtLeast<O extends object, K extends string> = NoExpand<
     O extends unknown
     ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
-      | {[P in keyof O as P extends K ? P : never]-?: O[P]} & O
+      | {[P in keyof O as P extends K ? K : never]-?: O[P]} & O
     : never>;
 
   type _Strict<U, _U = U> = U extends unknown ? U & OptionalFlat<_Record<Exclude<Keys<_U>, keyof U>, never>> : never;
@@ -637,15 +647,15 @@ export namespace Prisma {
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
 
 
-
-  interface TypeMapCb<ClientOptions = {}> extends $Utils.Fn<{extArgs: $Extensions.InternalArgs }, $Utils.Record<string, any>> {
-    returns: Prisma.TypeMap<this['params']['extArgs'], ClientOptions extends { omit: infer OmitOptions } ? OmitOptions : {}>
+  export type Datasources = {
+    watchmann_db?: Datasource
   }
 
-  export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> = {
-    globalOmitOptions: {
-      omit: GlobalOmitOptions
-    }
+  interface TypeMapCb extends $Utils.Fn<{extArgs: $Extensions.InternalArgs, clientOptions: PrismaClientOptions }, $Utils.Record<string, any>> {
+    returns: Prisma.TypeMap<this['params']['extArgs'], this['params']['clientOptions']>
+  }
+
+  export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
       modelProps: "user" | "profile" | "trend" | "post"
       txIsolationLevel: Prisma.TransactionIsolationLevel
@@ -976,32 +986,32 @@ export namespace Prisma {
   export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
   export interface PrismaClientOptions {
     /**
+     * Overwrites the datasource url from your schema.prisma file
+     */
+    datasources?: Datasources
+    /**
+     * Overwrites the datasource url from your schema.prisma file
+     */
+    datasourceUrl?: string
+    /**
      * @default "colorless"
      */
     errorFormat?: ErrorFormat
     /**
      * @example
      * ```
-     * // Shorthand for `emit: 'stdout'`
+     * // Defaults to stdout
      * log: ['query', 'info', 'warn', 'error']
      * 
-     * // Emit as events only
+     * // Emit as events
      * log: [
-     *   { emit: 'event', level: 'query' },
-     *   { emit: 'event', level: 'info' },
-     *   { emit: 'event', level: 'warn' }
-     *   { emit: 'event', level: 'error' }
+     *   { emit: 'stdout', level: 'query' },
+     *   { emit: 'stdout', level: 'info' },
+     *   { emit: 'stdout', level: 'warn' }
+     *   { emit: 'stdout', level: 'error' }
      * ]
-     * 
-     * / Emit as events and log to stdout
-     * og: [
-     *  { emit: 'stdout', level: 'query' },
-     *  { emit: 'stdout', level: 'info' },
-     *  { emit: 'stdout', level: 'warn' }
-     *  { emit: 'stdout', level: 'error' }
-     * 
      * ```
-     * Read more in our [docs](https://pris.ly/d/logging).
+     * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/logging#the-log-option).
      */
     log?: (LogLevel | LogDefinition)[]
     /**
@@ -1014,14 +1024,6 @@ export namespace Prisma {
       timeout?: number
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
-    /**
-     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
-     */
-    adapter?: runtime.SqlDriverAdapterFactory
-    /**
-     * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
-     */
-    accelerateUrl?: string
     /**
      * Global configuration for omitting model fields by default.
      * 
@@ -1037,22 +1039,6 @@ export namespace Prisma {
      * ```
      */
     omit?: Prisma.GlobalOmitConfig
-    /**
-     * SQL commenter plugins that add metadata to SQL queries as comments.
-     * Comments follow the sqlcommenter format: https://google.github.io/sqlcommenter/
-     * 
-     * @example
-     * ```
-     * const prisma = new PrismaClient({
-     *   adapter,
-     *   comments: [
-     *     traceContext(),
-     *     queryInsights(),
-     *   ],
-     * })
-     * ```
-     */
-    comments?: runtime.SqlCommenterPlugin[]
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
@@ -1068,15 +1054,10 @@ export namespace Prisma {
     emit: 'stdout' | 'event'
   }
 
-  export type CheckIsLogLevel<T> = T extends LogLevel ? T : never;
-
-  export type GetLogType<T> = CheckIsLogLevel<
-    T extends LogDefinition ? T['level'] : T
-  >;
-
-  export type GetEvents<T extends any[]> = T extends Array<LogLevel | LogDefinition>
-    ? GetLogType<T[number]>
-    : never;
+  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition ? T['emit'] extends 'event' ? T['level'] : never : never
+  export type GetEvents<T extends any> = T extends Array<LogLevel | LogDefinition> ?
+    GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
+    : never
 
   export type QueryEvent = {
     timestamp: Date
@@ -1117,6 +1098,25 @@ export namespace Prisma {
     | 'findRaw'
     | 'groupBy'
 
+  /**
+   * These options are being passed into the middleware as "params"
+   */
+  export type MiddlewareParams = {
+    model?: ModelName
+    action: PrismaAction
+    args: any
+    dataPath: string[]
+    runInTransaction: boolean
+  }
+
+  /**
+   * The `T` type makes sure, that the `return proceed` is not forgotten in the middleware implementation
+   */
+  export type Middleware<T = any> = (
+    params: MiddlewareParams,
+    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
+  ) => $Utils.JsPromise<T>
+
   // tested in getLogLevel.test.ts
   export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
 
@@ -1139,10 +1139,12 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
+    identities: number
     posts: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    identities?: boolean | UserCountOutputTypeCountIdentitiesArgs
     posts?: boolean | UserCountOutputTypeCountPostsArgs
   }
 
@@ -1155,6 +1157,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the UserCountOutputType
      */
     select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountIdentitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProfileWhereInput
   }
 
   /**
@@ -1364,7 +1373,7 @@ export namespace Prisma {
     name?: boolean
     password?: boolean
     createdAt?: boolean
-    profile?: boolean | User$profileArgs<ExtArgs>
+    identities?: boolean | User$identitiesArgs<ExtArgs>
     posts?: boolean | User$postsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -1395,7 +1404,7 @@ export namespace Prisma {
 
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "createdAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    profile?: boolean | User$profileArgs<ExtArgs>
+    identities?: boolean | User$identitiesArgs<ExtArgs>
     posts?: boolean | User$postsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -1405,7 +1414,7 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
-      profile: Prisma.$ProfilePayload<ExtArgs> | null
+      identities: Prisma.$ProfilePayload<ExtArgs>[]
       posts: Prisma.$PostPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -1425,7 +1434,7 @@ export namespace Prisma {
       select?: UserCountAggregateInputType | true
     }
 
-  export interface UserDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+  export interface UserDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
     [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['User'], meta: { name: 'User' } }
     /**
      * Find zero or one User that matches the filter.
@@ -1438,7 +1447,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUnique<T extends UserFindUniqueArgs>(args: SelectSubset<T, UserFindUniqueArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends UserFindUniqueArgs>(args: SelectSubset<T, UserFindUniqueArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find one User that matches the filter or throw an error with `error.code='P2025'`
@@ -1452,7 +1461,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUniqueOrThrow<T extends UserFindUniqueOrThrowArgs>(args: SelectSubset<T, UserFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends UserFindUniqueOrThrowArgs>(args: SelectSubset<T, UserFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find the first User that matches the filter.
@@ -1467,7 +1476,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirst<T extends UserFindFirstArgs>(args?: SelectSubset<T, UserFindFirstArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends UserFindFirstArgs>(args?: SelectSubset<T, UserFindFirstArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find the first User that matches the filter or
@@ -1483,7 +1492,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirstOrThrow<T extends UserFindFirstOrThrowArgs>(args?: SelectSubset<T, UserFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends UserFindFirstOrThrowArgs>(args?: SelectSubset<T, UserFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find zero or more Users that matches the filter.
@@ -1501,7 +1510,7 @@ export namespace Prisma {
      * const userWithIdOnly = await prisma.user.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends UserFindManyArgs>(args?: SelectSubset<T, UserFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends UserFindManyArgs>(args?: SelectSubset<T, UserFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", ClientOptions>>
 
     /**
      * Create a User.
@@ -1515,7 +1524,7 @@ export namespace Prisma {
      * })
      * 
      */
-    create<T extends UserCreateArgs>(args: SelectSubset<T, UserCreateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends UserCreateArgs>(args: SelectSubset<T, UserCreateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Create many Users.
@@ -1553,7 +1562,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
 
     /**
      * Delete a User.
@@ -1567,7 +1576,7 @@ export namespace Prisma {
      * })
      * 
      */
-    delete<T extends UserDeleteArgs>(args: SelectSubset<T, UserDeleteArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends UserDeleteArgs>(args: SelectSubset<T, UserDeleteArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Update one User.
@@ -1584,7 +1593,7 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends UserUpdateArgs>(args: SelectSubset<T, UserUpdateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends UserUpdateArgs>(args: SelectSubset<T, UserUpdateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Delete zero or more Users.
@@ -1647,7 +1656,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
 
     /**
      * Create or update one User.
@@ -1666,7 +1675,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
 
 
     /**
@@ -1806,10 +1815,10 @@ export namespace Prisma {
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    profile<T extends User$profileArgs<ExtArgs> = {}>(args?: Subset<T, User$profileArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    posts<T extends User$postsArgs<ExtArgs> = {}>(args?: Subset<T, User$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    identities<T extends User$identitiesArgs<ExtArgs> = {}>(args?: Subset<T, User$identitiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    posts<T extends User$postsArgs<ExtArgs> = {}>(args?: Subset<T, User$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1837,7 +1846,7 @@ export namespace Prisma {
 
   /**
    * Fields of the User model
-   */
+   */ 
   interface UserFieldRefs {
     readonly id: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
@@ -2040,11 +2049,6 @@ export namespace Prisma {
      * Skip the first `n` Users.
      */
     skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Users.
-     */
     distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
@@ -2136,10 +2140,6 @@ export namespace Prisma {
      * Filter which Users to update
      */
     where?: UserWhereInput
-    /**
-     * Limit how many Users to update.
-     */
-    limit?: number
   }
 
   /**
@@ -2162,10 +2162,6 @@ export namespace Prisma {
      * Filter which Users to update
      */
     where?: UserWhereInput
-    /**
-     * Limit how many Users to update.
-     */
-    limit?: number
   }
 
   /**
@@ -2228,16 +2224,12 @@ export namespace Prisma {
      * Filter which Users to delete
      */
     where?: UserWhereInput
-    /**
-     * Limit how many Users to delete.
-     */
-    limit?: number
   }
 
   /**
-   * User.profile
+   * User.identities
    */
-  export type User$profileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$identitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the Profile
      */
@@ -2251,6 +2243,11 @@ export namespace Prisma {
      */
     include?: ProfileInclude<ExtArgs> | null
     where?: ProfileWhereInput
+    orderBy?: ProfileOrderByWithRelationInput | ProfileOrderByWithRelationInput[]
+    cursor?: ProfileWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProfileScalarFieldEnum | ProfileScalarFieldEnum[]
   }
 
   /**
@@ -2309,28 +2306,34 @@ export namespace Prisma {
   export type ProfileMinAggregateOutputType = {
     id: string | null
     userId: string | null
-    identity: string | null
+    identityName: string | null
+    identityRole: string | null
     targetPlatforms: string | null
     niche: string | null
     tone: string | null
+    isActive: boolean | null
   }
 
   export type ProfileMaxAggregateOutputType = {
     id: string | null
     userId: string | null
-    identity: string | null
+    identityName: string | null
+    identityRole: string | null
     targetPlatforms: string | null
     niche: string | null
     tone: string | null
+    isActive: boolean | null
   }
 
   export type ProfileCountAggregateOutputType = {
     id: number
     userId: number
-    identity: number
+    identityName: number
+    identityRole: number
     targetPlatforms: number
     niche: number
     tone: number
+    isActive: number
     _all: number
   }
 
@@ -2338,28 +2341,34 @@ export namespace Prisma {
   export type ProfileMinAggregateInputType = {
     id?: true
     userId?: true
-    identity?: true
+    identityName?: true
+    identityRole?: true
     targetPlatforms?: true
     niche?: true
     tone?: true
+    isActive?: true
   }
 
   export type ProfileMaxAggregateInputType = {
     id?: true
     userId?: true
-    identity?: true
+    identityName?: true
+    identityRole?: true
     targetPlatforms?: true
     niche?: true
     tone?: true
+    isActive?: true
   }
 
   export type ProfileCountAggregateInputType = {
     id?: true
     userId?: true
-    identity?: true
+    identityName?: true
+    identityRole?: true
     targetPlatforms?: true
     niche?: true
     tone?: true
+    isActive?: true
     _all?: true
   }
 
@@ -2438,10 +2447,12 @@ export namespace Prisma {
   export type ProfileGroupByOutputType = {
     id: string
     userId: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone: string | null
+    isActive: boolean
     _count: ProfileCountAggregateOutputType | null
     _min: ProfileMinAggregateOutputType | null
     _max: ProfileMaxAggregateOutputType | null
@@ -2464,43 +2475,51 @@ export namespace Prisma {
   export type ProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
-    identity?: boolean
+    identityName?: boolean
+    identityRole?: boolean
     targetPlatforms?: boolean
     niche?: boolean
     tone?: boolean
+    isActive?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
   export type ProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
-    identity?: boolean
+    identityName?: boolean
+    identityRole?: boolean
     targetPlatforms?: boolean
     niche?: boolean
     tone?: boolean
+    isActive?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
   export type ProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
-    identity?: boolean
+    identityName?: boolean
+    identityRole?: boolean
     targetPlatforms?: boolean
     niche?: boolean
     tone?: boolean
+    isActive?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
   export type ProfileSelectScalar = {
     id?: boolean
     userId?: boolean
-    identity?: boolean
+    identityName?: boolean
+    identityRole?: boolean
     targetPlatforms?: boolean
     niche?: boolean
     tone?: boolean
+    isActive?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "identity" | "targetPlatforms" | "niche" | "tone", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "identityName" | "identityRole" | "targetPlatforms" | "niche" | "tone" | "isActive", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -2519,10 +2538,12 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       userId: string
-      identity: string
+      identityName: string
+      identityRole: string
       targetPlatforms: string
       niche: string
       tone: string | null
+      isActive: boolean
     }, ExtArgs["result"]["profile"]>
     composites: {}
   }
@@ -2534,7 +2555,7 @@ export namespace Prisma {
       select?: ProfileCountAggregateInputType | true
     }
 
-  export interface ProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+  export interface ProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
     [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Profile'], meta: { name: 'Profile' } }
     /**
      * Find zero or one Profile that matches the filter.
@@ -2547,7 +2568,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUnique<T extends ProfileFindUniqueArgs>(args: SelectSubset<T, ProfileFindUniqueArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends ProfileFindUniqueArgs>(args: SelectSubset<T, ProfileFindUniqueArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find one Profile that matches the filter or throw an error with `error.code='P2025'`
@@ -2561,7 +2582,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, ProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends ProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, ProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find the first Profile that matches the filter.
@@ -2576,7 +2597,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirst<T extends ProfileFindFirstArgs>(args?: SelectSubset<T, ProfileFindFirstArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends ProfileFindFirstArgs>(args?: SelectSubset<T, ProfileFindFirstArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find the first Profile that matches the filter or
@@ -2592,7 +2613,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirstOrThrow<T extends ProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, ProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends ProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, ProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find zero or more Profiles that matches the filter.
@@ -2610,7 +2631,7 @@ export namespace Prisma {
      * const profileWithIdOnly = await prisma.profile.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ProfileFindManyArgs>(args?: SelectSubset<T, ProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends ProfileFindManyArgs>(args?: SelectSubset<T, ProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findMany", ClientOptions>>
 
     /**
      * Create a Profile.
@@ -2624,7 +2645,7 @@ export namespace Prisma {
      * })
      * 
      */
-    create<T extends ProfileCreateArgs>(args: SelectSubset<T, ProfileCreateArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends ProfileCreateArgs>(args: SelectSubset<T, ProfileCreateArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Create many Profiles.
@@ -2662,7 +2683,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, ProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends ProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, ProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
 
     /**
      * Delete a Profile.
@@ -2676,7 +2697,7 @@ export namespace Prisma {
      * })
      * 
      */
-    delete<T extends ProfileDeleteArgs>(args: SelectSubset<T, ProfileDeleteArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends ProfileDeleteArgs>(args: SelectSubset<T, ProfileDeleteArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Update one Profile.
@@ -2693,7 +2714,7 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ProfileUpdateArgs>(args: SelectSubset<T, ProfileUpdateArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends ProfileUpdateArgs>(args: SelectSubset<T, ProfileUpdateArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Delete zero or more Profiles.
@@ -2756,7 +2777,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, ProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends ProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, ProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
 
     /**
      * Create or update one Profile.
@@ -2775,7 +2796,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    upsert<T extends ProfileUpsertArgs>(args: SelectSubset<T, ProfileUpsertArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends ProfileUpsertArgs>(args: SelectSubset<T, ProfileUpsertArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
 
 
     /**
@@ -2915,9 +2936,9 @@ export namespace Prisma {
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2945,14 +2966,16 @@ export namespace Prisma {
 
   /**
    * Fields of the Profile model
-   */
+   */ 
   interface ProfileFieldRefs {
     readonly id: FieldRef<"Profile", 'String'>
     readonly userId: FieldRef<"Profile", 'String'>
-    readonly identity: FieldRef<"Profile", 'String'>
+    readonly identityName: FieldRef<"Profile", 'String'>
+    readonly identityRole: FieldRef<"Profile", 'String'>
     readonly targetPlatforms: FieldRef<"Profile", 'String'>
     readonly niche: FieldRef<"Profile", 'String'>
     readonly tone: FieldRef<"Profile", 'String'>
+    readonly isActive: FieldRef<"Profile", 'Boolean'>
   }
     
 
@@ -3149,11 +3172,6 @@ export namespace Prisma {
      * Skip the first `n` Profiles.
      */
     skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Profiles.
-     */
     distinct?: ProfileScalarFieldEnum | ProfileScalarFieldEnum[]
   }
 
@@ -3249,10 +3267,6 @@ export namespace Prisma {
      * Filter which Profiles to update
      */
     where?: ProfileWhereInput
-    /**
-     * Limit how many Profiles to update.
-     */
-    limit?: number
   }
 
   /**
@@ -3275,10 +3289,6 @@ export namespace Prisma {
      * Filter which Profiles to update
      */
     where?: ProfileWhereInput
-    /**
-     * Limit how many Profiles to update.
-     */
-    limit?: number
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -3345,10 +3355,6 @@ export namespace Prisma {
      * Filter which Profiles to delete
      */
     where?: ProfileWhereInput
-    /**
-     * Limit how many Profiles to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -3385,7 +3391,6 @@ export namespace Prisma {
     platform: string | null
     headline: string | null
     description: string | null
-    metadata: string | null
     discoveredAt: Date | null
   }
 
@@ -3394,7 +3399,6 @@ export namespace Prisma {
     platform: string | null
     headline: string | null
     description: string | null
-    metadata: string | null
     discoveredAt: Date | null
   }
 
@@ -3403,7 +3407,6 @@ export namespace Prisma {
     platform: number
     headline: number
     description: number
-    metadata: number
     discoveredAt: number
     _all: number
   }
@@ -3414,7 +3417,6 @@ export namespace Prisma {
     platform?: true
     headline?: true
     description?: true
-    metadata?: true
     discoveredAt?: true
   }
 
@@ -3423,7 +3425,6 @@ export namespace Prisma {
     platform?: true
     headline?: true
     description?: true
-    metadata?: true
     discoveredAt?: true
   }
 
@@ -3432,7 +3433,6 @@ export namespace Prisma {
     platform?: true
     headline?: true
     description?: true
-    metadata?: true
     discoveredAt?: true
     _all?: true
   }
@@ -3514,7 +3514,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description: string | null
-    metadata: string | null
     discoveredAt: Date
     _count: TrendCountAggregateOutputType | null
     _min: TrendMinAggregateOutputType | null
@@ -3540,7 +3539,6 @@ export namespace Prisma {
     platform?: boolean
     headline?: boolean
     description?: boolean
-    metadata?: boolean
     discoveredAt?: boolean
     posts?: boolean | Trend$postsArgs<ExtArgs>
     _count?: boolean | TrendCountOutputTypeDefaultArgs<ExtArgs>
@@ -3551,7 +3549,6 @@ export namespace Prisma {
     platform?: boolean
     headline?: boolean
     description?: boolean
-    metadata?: boolean
     discoveredAt?: boolean
   }, ExtArgs["result"]["trend"]>
 
@@ -3560,7 +3557,6 @@ export namespace Prisma {
     platform?: boolean
     headline?: boolean
     description?: boolean
-    metadata?: boolean
     discoveredAt?: boolean
   }, ExtArgs["result"]["trend"]>
 
@@ -3569,11 +3565,10 @@ export namespace Prisma {
     platform?: boolean
     headline?: boolean
     description?: boolean
-    metadata?: boolean
     discoveredAt?: boolean
   }
 
-  export type TrendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "platform" | "headline" | "description" | "metadata" | "discoveredAt", ExtArgs["result"]["trend"]>
+  export type TrendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "platform" | "headline" | "description" | "discoveredAt", ExtArgs["result"]["trend"]>
   export type TrendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     posts?: boolean | Trend$postsArgs<ExtArgs>
     _count?: boolean | TrendCountOutputTypeDefaultArgs<ExtArgs>
@@ -3591,7 +3586,6 @@ export namespace Prisma {
       platform: string
       headline: string
       description: string | null
-      metadata: string | null
       discoveredAt: Date
     }, ExtArgs["result"]["trend"]>
     composites: {}
@@ -3604,7 +3598,7 @@ export namespace Prisma {
       select?: TrendCountAggregateInputType | true
     }
 
-  export interface TrendDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+  export interface TrendDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
     [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Trend'], meta: { name: 'Trend' } }
     /**
      * Find zero or one Trend that matches the filter.
@@ -3617,7 +3611,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUnique<T extends TrendFindUniqueArgs>(args: SelectSubset<T, TrendFindUniqueArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends TrendFindUniqueArgs>(args: SelectSubset<T, TrendFindUniqueArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find one Trend that matches the filter or throw an error with `error.code='P2025'`
@@ -3631,7 +3625,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUniqueOrThrow<T extends TrendFindUniqueOrThrowArgs>(args: SelectSubset<T, TrendFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends TrendFindUniqueOrThrowArgs>(args: SelectSubset<T, TrendFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find the first Trend that matches the filter.
@@ -3646,7 +3640,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirst<T extends TrendFindFirstArgs>(args?: SelectSubset<T, TrendFindFirstArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends TrendFindFirstArgs>(args?: SelectSubset<T, TrendFindFirstArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find the first Trend that matches the filter or
@@ -3662,7 +3656,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirstOrThrow<T extends TrendFindFirstOrThrowArgs>(args?: SelectSubset<T, TrendFindFirstOrThrowArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends TrendFindFirstOrThrowArgs>(args?: SelectSubset<T, TrendFindFirstOrThrowArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find zero or more Trends that matches the filter.
@@ -3680,7 +3674,7 @@ export namespace Prisma {
      * const trendWithIdOnly = await prisma.trend.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends TrendFindManyArgs>(args?: SelectSubset<T, TrendFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends TrendFindManyArgs>(args?: SelectSubset<T, TrendFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findMany", ClientOptions>>
 
     /**
      * Create a Trend.
@@ -3694,7 +3688,7 @@ export namespace Prisma {
      * })
      * 
      */
-    create<T extends TrendCreateArgs>(args: SelectSubset<T, TrendCreateArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends TrendCreateArgs>(args: SelectSubset<T, TrendCreateArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Create many Trends.
@@ -3732,7 +3726,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends TrendCreateManyAndReturnArgs>(args?: SelectSubset<T, TrendCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends TrendCreateManyAndReturnArgs>(args?: SelectSubset<T, TrendCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
 
     /**
      * Delete a Trend.
@@ -3746,7 +3740,7 @@ export namespace Prisma {
      * })
      * 
      */
-    delete<T extends TrendDeleteArgs>(args: SelectSubset<T, TrendDeleteArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends TrendDeleteArgs>(args: SelectSubset<T, TrendDeleteArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Update one Trend.
@@ -3763,7 +3757,7 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends TrendUpdateArgs>(args: SelectSubset<T, TrendUpdateArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends TrendUpdateArgs>(args: SelectSubset<T, TrendUpdateArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Delete zero or more Trends.
@@ -3826,7 +3820,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends TrendUpdateManyAndReturnArgs>(args: SelectSubset<T, TrendUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends TrendUpdateManyAndReturnArgs>(args: SelectSubset<T, TrendUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
 
     /**
      * Create or update one Trend.
@@ -3845,7 +3839,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    upsert<T extends TrendUpsertArgs>(args: SelectSubset<T, TrendUpsertArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends TrendUpsertArgs>(args: SelectSubset<T, TrendUpsertArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
 
 
     /**
@@ -3985,9 +3979,9 @@ export namespace Prisma {
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__TrendClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__TrendClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    posts<T extends Trend$postsArgs<ExtArgs> = {}>(args?: Subset<T, Trend$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    posts<T extends Trend$postsArgs<ExtArgs> = {}>(args?: Subset<T, Trend$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4015,13 +4009,12 @@ export namespace Prisma {
 
   /**
    * Fields of the Trend model
-   */
+   */ 
   interface TrendFieldRefs {
     readonly id: FieldRef<"Trend", 'String'>
     readonly platform: FieldRef<"Trend", 'String'>
     readonly headline: FieldRef<"Trend", 'String'>
     readonly description: FieldRef<"Trend", 'String'>
-    readonly metadata: FieldRef<"Trend", 'String'>
     readonly discoveredAt: FieldRef<"Trend", 'DateTime'>
   }
     
@@ -4219,11 +4212,6 @@ export namespace Prisma {
      * Skip the first `n` Trends.
      */
     skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Trends.
-     */
     distinct?: TrendScalarFieldEnum | TrendScalarFieldEnum[]
   }
 
@@ -4315,10 +4303,6 @@ export namespace Prisma {
      * Filter which Trends to update
      */
     where?: TrendWhereInput
-    /**
-     * Limit how many Trends to update.
-     */
-    limit?: number
   }
 
   /**
@@ -4341,10 +4325,6 @@ export namespace Prisma {
      * Filter which Trends to update
      */
     where?: TrendWhereInput
-    /**
-     * Limit how many Trends to update.
-     */
-    limit?: number
   }
 
   /**
@@ -4407,10 +4387,6 @@ export namespace Prisma {
      * Filter which Trends to delete
      */
     where?: TrendWhereInput
-    /**
-     * Limit how many Trends to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -4473,6 +4449,7 @@ export namespace Prisma {
     platformTarget: string | null
     content: string | null
     status: string | null
+    scheduledFor: Date | null
     createdAt: Date | null
   }
 
@@ -4483,6 +4460,7 @@ export namespace Prisma {
     platformTarget: string | null
     content: string | null
     status: string | null
+    scheduledFor: Date | null
     createdAt: Date | null
   }
 
@@ -4493,6 +4471,7 @@ export namespace Prisma {
     platformTarget: number
     content: number
     status: number
+    scheduledFor: number
     createdAt: number
     _all: number
   }
@@ -4505,6 +4484,7 @@ export namespace Prisma {
     platformTarget?: true
     content?: true
     status?: true
+    scheduledFor?: true
     createdAt?: true
   }
 
@@ -4515,6 +4495,7 @@ export namespace Prisma {
     platformTarget?: true
     content?: true
     status?: true
+    scheduledFor?: true
     createdAt?: true
   }
 
@@ -4525,6 +4506,7 @@ export namespace Prisma {
     platformTarget?: true
     content?: true
     status?: true
+    scheduledFor?: true
     createdAt?: true
     _all?: true
   }
@@ -4608,6 +4590,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status: string
+    scheduledFor: Date | null
     createdAt: Date
     _count: PostCountAggregateOutputType | null
     _min: PostMinAggregateOutputType | null
@@ -4635,6 +4618,7 @@ export namespace Prisma {
     platformTarget?: boolean
     content?: boolean
     status?: boolean
+    scheduledFor?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     trend?: boolean | Post$trendArgs<ExtArgs>
@@ -4647,6 +4631,7 @@ export namespace Prisma {
     platformTarget?: boolean
     content?: boolean
     status?: boolean
+    scheduledFor?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     trend?: boolean | Post$trendArgs<ExtArgs>
@@ -4659,6 +4644,7 @@ export namespace Prisma {
     platformTarget?: boolean
     content?: boolean
     status?: boolean
+    scheduledFor?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     trend?: boolean | Post$trendArgs<ExtArgs>
@@ -4671,10 +4657,11 @@ export namespace Prisma {
     platformTarget?: boolean
     content?: boolean
     status?: boolean
+    scheduledFor?: boolean
     createdAt?: boolean
   }
 
-  export type PostOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "trendId" | "platformTarget" | "content" | "status" | "createdAt", ExtArgs["result"]["post"]>
+  export type PostOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "trendId" | "platformTarget" | "content" | "status" | "scheduledFor" | "createdAt", ExtArgs["result"]["post"]>
   export type PostInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     trend?: boolean | Post$trendArgs<ExtArgs>
@@ -4701,6 +4688,7 @@ export namespace Prisma {
       platformTarget: string
       content: string
       status: string
+      scheduledFor: Date | null
       createdAt: Date
     }, ExtArgs["result"]["post"]>
     composites: {}
@@ -4713,7 +4701,7 @@ export namespace Prisma {
       select?: PostCountAggregateInputType | true
     }
 
-  export interface PostDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+  export interface PostDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
     [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Post'], meta: { name: 'Post' } }
     /**
      * Find zero or one Post that matches the filter.
@@ -4726,7 +4714,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUnique<T extends PostFindUniqueArgs>(args: SelectSubset<T, PostFindUniqueArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends PostFindUniqueArgs>(args: SelectSubset<T, PostFindUniqueArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find one Post that matches the filter or throw an error with `error.code='P2025'`
@@ -4740,7 +4728,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findUniqueOrThrow<T extends PostFindUniqueOrThrowArgs>(args: SelectSubset<T, PostFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends PostFindUniqueOrThrowArgs>(args: SelectSubset<T, PostFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find the first Post that matches the filter.
@@ -4755,7 +4743,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirst<T extends PostFindFirstArgs>(args?: SelectSubset<T, PostFindFirstArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends PostFindFirstArgs>(args?: SelectSubset<T, PostFindFirstArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
 
     /**
      * Find the first Post that matches the filter or
@@ -4771,7 +4759,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    findFirstOrThrow<T extends PostFindFirstOrThrowArgs>(args?: SelectSubset<T, PostFindFirstOrThrowArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends PostFindFirstOrThrowArgs>(args?: SelectSubset<T, PostFindFirstOrThrowArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Find zero or more Posts that matches the filter.
@@ -4789,7 +4777,7 @@ export namespace Prisma {
      * const postWithIdOnly = await prisma.post.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends PostFindManyArgs>(args?: SelectSubset<T, PostFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends PostFindManyArgs>(args?: SelectSubset<T, PostFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", ClientOptions>>
 
     /**
      * Create a Post.
@@ -4803,7 +4791,7 @@ export namespace Prisma {
      * })
      * 
      */
-    create<T extends PostCreateArgs>(args: SelectSubset<T, PostCreateArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends PostCreateArgs>(args: SelectSubset<T, PostCreateArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Create many Posts.
@@ -4841,7 +4829,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends PostCreateManyAndReturnArgs>(args?: SelectSubset<T, PostCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends PostCreateManyAndReturnArgs>(args?: SelectSubset<T, PostCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
 
     /**
      * Delete a Post.
@@ -4855,7 +4843,7 @@ export namespace Prisma {
      * })
      * 
      */
-    delete<T extends PostDeleteArgs>(args: SelectSubset<T, PostDeleteArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends PostDeleteArgs>(args: SelectSubset<T, PostDeleteArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Update one Post.
@@ -4872,7 +4860,7 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends PostUpdateArgs>(args: SelectSubset<T, PostUpdateArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends PostUpdateArgs>(args: SelectSubset<T, PostUpdateArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
 
     /**
      * Delete zero or more Posts.
@@ -4935,7 +4923,7 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends PostUpdateManyAndReturnArgs>(args: SelectSubset<T, PostUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends PostUpdateManyAndReturnArgs>(args: SelectSubset<T, PostUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
 
     /**
      * Create or update one Post.
@@ -4954,7 +4942,7 @@ export namespace Prisma {
      *   }
      * })
      */
-    upsert<T extends PostUpsertArgs>(args: SelectSubset<T, PostUpsertArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends PostUpsertArgs>(args: SelectSubset<T, PostUpsertArgs<ExtArgs>>): Prisma__PostClient<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
 
 
     /**
@@ -5094,10 +5082,10 @@ export namespace Prisma {
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__PostClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__PostClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    trend<T extends Post$trendArgs<ExtArgs> = {}>(args?: Subset<T, Post$trendArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
+    trend<T extends Post$trendArgs<ExtArgs> = {}>(args?: Subset<T, Post$trendArgs<ExtArgs>>): Prisma__TrendClient<$Result.GetResult<Prisma.$TrendPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5125,7 +5113,7 @@ export namespace Prisma {
 
   /**
    * Fields of the Post model
-   */
+   */ 
   interface PostFieldRefs {
     readonly id: FieldRef<"Post", 'String'>
     readonly userId: FieldRef<"Post", 'String'>
@@ -5133,6 +5121,7 @@ export namespace Prisma {
     readonly platformTarget: FieldRef<"Post", 'String'>
     readonly content: FieldRef<"Post", 'String'>
     readonly status: FieldRef<"Post", 'String'>
+    readonly scheduledFor: FieldRef<"Post", 'DateTime'>
     readonly createdAt: FieldRef<"Post", 'DateTime'>
   }
     
@@ -5330,11 +5319,6 @@ export namespace Prisma {
      * Skip the first `n` Posts.
      */
     skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of Posts.
-     */
     distinct?: PostScalarFieldEnum | PostScalarFieldEnum[]
   }
 
@@ -5430,10 +5414,6 @@ export namespace Prisma {
      * Filter which Posts to update
      */
     where?: PostWhereInput
-    /**
-     * Limit how many Posts to update.
-     */
-    limit?: number
   }
 
   /**
@@ -5456,10 +5436,6 @@ export namespace Prisma {
      * Filter which Posts to update
      */
     where?: PostWhereInput
-    /**
-     * Limit how many Posts to update.
-     */
-    limit?: number
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -5526,10 +5502,6 @@ export namespace Prisma {
      * Filter which Posts to delete
      */
     where?: PostWhereInput
-    /**
-     * Limit how many Posts to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -5595,10 +5567,12 @@ export namespace Prisma {
   export const ProfileScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
-    identity: 'identity',
+    identityName: 'identityName',
+    identityRole: 'identityRole',
     targetPlatforms: 'targetPlatforms',
     niche: 'niche',
-    tone: 'tone'
+    tone: 'tone',
+    isActive: 'isActive'
   };
 
   export type ProfileScalarFieldEnum = (typeof ProfileScalarFieldEnum)[keyof typeof ProfileScalarFieldEnum]
@@ -5609,7 +5583,6 @@ export namespace Prisma {
     platform: 'platform',
     headline: 'headline',
     description: 'description',
-    metadata: 'metadata',
     discoveredAt: 'discoveredAt'
   };
 
@@ -5623,6 +5596,7 @@ export namespace Prisma {
     platformTarget: 'platformTarget',
     content: 'content',
     status: 'status',
+    scheduledFor: 'scheduledFor',
     createdAt: 'createdAt'
   };
 
@@ -5646,7 +5620,7 @@ export namespace Prisma {
 
 
   /**
-   * Field references
+   * Field references 
    */
 
 
@@ -5661,6 +5635,13 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -5683,7 +5664,7 @@ export namespace Prisma {
     name?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
-    profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
+    identities?: ProfileListRelationFilter
     posts?: PostListRelationFilter
   }
 
@@ -5693,7 +5674,7 @@ export namespace Prisma {
     name?: SortOrderInput | SortOrder
     password?: SortOrder
     createdAt?: SortOrder
-    profile?: ProfileOrderByWithRelationInput
+    identities?: ProfileOrderByRelationAggregateInput
     posts?: PostOrderByRelationAggregateInput
   }
 
@@ -5706,7 +5687,7 @@ export namespace Prisma {
     name?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
-    profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
+    identities?: ProfileListRelationFilter
     posts?: PostListRelationFilter
   }, "id" | "email">
 
@@ -5738,43 +5719,51 @@ export namespace Prisma {
     NOT?: ProfileWhereInput | ProfileWhereInput[]
     id?: StringFilter<"Profile"> | string
     userId?: StringFilter<"Profile"> | string
-    identity?: StringFilter<"Profile"> | string
+    identityName?: StringFilter<"Profile"> | string
+    identityRole?: StringFilter<"Profile"> | string
     targetPlatforms?: StringFilter<"Profile"> | string
     niche?: StringFilter<"Profile"> | string
     tone?: StringNullableFilter<"Profile"> | string | null
+    isActive?: BoolFilter<"Profile"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type ProfileOrderByWithRelationInput = {
     id?: SortOrder
     userId?: SortOrder
-    identity?: SortOrder
+    identityName?: SortOrder
+    identityRole?: SortOrder
     targetPlatforms?: SortOrder
     niche?: SortOrder
     tone?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     user?: UserOrderByWithRelationInput
   }
 
   export type ProfileWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    userId?: string
     AND?: ProfileWhereInput | ProfileWhereInput[]
     OR?: ProfileWhereInput[]
     NOT?: ProfileWhereInput | ProfileWhereInput[]
-    identity?: StringFilter<"Profile"> | string
+    userId?: StringFilter<"Profile"> | string
+    identityName?: StringFilter<"Profile"> | string
+    identityRole?: StringFilter<"Profile"> | string
     targetPlatforms?: StringFilter<"Profile"> | string
     niche?: StringFilter<"Profile"> | string
     tone?: StringNullableFilter<"Profile"> | string | null
+    isActive?: BoolFilter<"Profile"> | boolean
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }, "id" | "userId">
+  }, "id">
 
   export type ProfileOrderByWithAggregationInput = {
     id?: SortOrder
     userId?: SortOrder
-    identity?: SortOrder
+    identityName?: SortOrder
+    identityRole?: SortOrder
     targetPlatforms?: SortOrder
     niche?: SortOrder
     tone?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     _count?: ProfileCountOrderByAggregateInput
     _max?: ProfileMaxOrderByAggregateInput
     _min?: ProfileMinOrderByAggregateInput
@@ -5786,10 +5775,12 @@ export namespace Prisma {
     NOT?: ProfileScalarWhereWithAggregatesInput | ProfileScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Profile"> | string
     userId?: StringWithAggregatesFilter<"Profile"> | string
-    identity?: StringWithAggregatesFilter<"Profile"> | string
+    identityName?: StringWithAggregatesFilter<"Profile"> | string
+    identityRole?: StringWithAggregatesFilter<"Profile"> | string
     targetPlatforms?: StringWithAggregatesFilter<"Profile"> | string
     niche?: StringWithAggregatesFilter<"Profile"> | string
     tone?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    isActive?: BoolWithAggregatesFilter<"Profile"> | boolean
   }
 
   export type TrendWhereInput = {
@@ -5800,7 +5791,6 @@ export namespace Prisma {
     platform?: StringFilter<"Trend"> | string
     headline?: StringFilter<"Trend"> | string
     description?: StringNullableFilter<"Trend"> | string | null
-    metadata?: StringNullableFilter<"Trend"> | string | null
     discoveredAt?: DateTimeFilter<"Trend"> | Date | string
     posts?: PostListRelationFilter
   }
@@ -5810,7 +5800,6 @@ export namespace Prisma {
     platform?: SortOrder
     headline?: SortOrder
     description?: SortOrderInput | SortOrder
-    metadata?: SortOrderInput | SortOrder
     discoveredAt?: SortOrder
     posts?: PostOrderByRelationAggregateInput
   }
@@ -5823,7 +5812,6 @@ export namespace Prisma {
     platform?: StringFilter<"Trend"> | string
     headline?: StringFilter<"Trend"> | string
     description?: StringNullableFilter<"Trend"> | string | null
-    metadata?: StringNullableFilter<"Trend"> | string | null
     discoveredAt?: DateTimeFilter<"Trend"> | Date | string
     posts?: PostListRelationFilter
   }, "id">
@@ -5833,7 +5821,6 @@ export namespace Prisma {
     platform?: SortOrder
     headline?: SortOrder
     description?: SortOrderInput | SortOrder
-    metadata?: SortOrderInput | SortOrder
     discoveredAt?: SortOrder
     _count?: TrendCountOrderByAggregateInput
     _max?: TrendMaxOrderByAggregateInput
@@ -5848,7 +5835,6 @@ export namespace Prisma {
     platform?: StringWithAggregatesFilter<"Trend"> | string
     headline?: StringWithAggregatesFilter<"Trend"> | string
     description?: StringNullableWithAggregatesFilter<"Trend"> | string | null
-    metadata?: StringNullableWithAggregatesFilter<"Trend"> | string | null
     discoveredAt?: DateTimeWithAggregatesFilter<"Trend"> | Date | string
   }
 
@@ -5862,6 +5848,7 @@ export namespace Prisma {
     platformTarget?: StringFilter<"Post"> | string
     content?: StringFilter<"Post"> | string
     status?: StringFilter<"Post"> | string
+    scheduledFor?: DateTimeNullableFilter<"Post"> | Date | string | null
     createdAt?: DateTimeFilter<"Post"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     trend?: XOR<TrendNullableScalarRelationFilter, TrendWhereInput> | null
@@ -5874,6 +5861,7 @@ export namespace Prisma {
     platformTarget?: SortOrder
     content?: SortOrder
     status?: SortOrder
+    scheduledFor?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
     trend?: TrendOrderByWithRelationInput
@@ -5889,6 +5877,7 @@ export namespace Prisma {
     platformTarget?: StringFilter<"Post"> | string
     content?: StringFilter<"Post"> | string
     status?: StringFilter<"Post"> | string
+    scheduledFor?: DateTimeNullableFilter<"Post"> | Date | string | null
     createdAt?: DateTimeFilter<"Post"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     trend?: XOR<TrendNullableScalarRelationFilter, TrendWhereInput> | null
@@ -5901,6 +5890,7 @@ export namespace Prisma {
     platformTarget?: SortOrder
     content?: SortOrder
     status?: SortOrder
+    scheduledFor?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: PostCountOrderByAggregateInput
     _max?: PostMaxOrderByAggregateInput
@@ -5917,6 +5907,7 @@ export namespace Prisma {
     platformTarget?: StringWithAggregatesFilter<"Post"> | string
     content?: StringWithAggregatesFilter<"Post"> | string
     status?: StringWithAggregatesFilter<"Post"> | string
+    scheduledFor?: DateTimeNullableWithAggregatesFilter<"Post"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Post"> | Date | string
   }
 
@@ -5926,7 +5917,7 @@ export namespace Prisma {
     name?: string | null
     password: string
     createdAt?: Date | string
-    profile?: ProfileCreateNestedOneWithoutUserInput
+    identities?: ProfileCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutUserInput
   }
 
@@ -5936,7 +5927,7 @@ export namespace Prisma {
     name?: string | null
     password: string
     createdAt?: Date | string
-    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    identities?: ProfileUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -5946,7 +5937,7 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    profile?: ProfileUpdateOneWithoutUserNestedInput
+    identities?: ProfileUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutUserNestedInput
   }
 
@@ -5956,7 +5947,7 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    identities?: ProfileUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -5986,64 +5977,78 @@ export namespace Prisma {
 
   export type ProfileCreateInput = {
     id?: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone?: string | null
-    user: UserCreateNestedOneWithoutProfileInput
+    isActive?: boolean
+    user: UserCreateNestedOneWithoutIdentitiesInput
   }
 
   export type ProfileUncheckedCreateInput = {
     id?: string
     userId: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone?: string | null
+    isActive?: boolean
   }
 
   export type ProfileUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
     targetPlatforms?: StringFieldUpdateOperationsInput | string
     niche?: StringFieldUpdateOperationsInput | string
     tone?: NullableStringFieldUpdateOperationsInput | string | null
-    user?: UserUpdateOneRequiredWithoutProfileNestedInput
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    user?: UserUpdateOneRequiredWithoutIdentitiesNestedInput
   }
 
   export type ProfileUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
     targetPlatforms?: StringFieldUpdateOperationsInput | string
     niche?: StringFieldUpdateOperationsInput | string
     tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ProfileCreateManyInput = {
     id?: string
     userId: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone?: string | null
+    isActive?: boolean
   }
 
   export type ProfileUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
     targetPlatforms?: StringFieldUpdateOperationsInput | string
     niche?: StringFieldUpdateOperationsInput | string
     tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ProfileUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
     targetPlatforms?: StringFieldUpdateOperationsInput | string
     niche?: StringFieldUpdateOperationsInput | string
     tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type TrendCreateInput = {
@@ -6051,7 +6056,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description?: string | null
-    metadata?: string | null
     discoveredAt?: Date | string
     posts?: PostCreateNestedManyWithoutTrendInput
   }
@@ -6061,7 +6065,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description?: string | null
-    metadata?: string | null
     discoveredAt?: Date | string
     posts?: PostUncheckedCreateNestedManyWithoutTrendInput
   }
@@ -6071,7 +6074,6 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     posts?: PostUpdateManyWithoutTrendNestedInput
   }
@@ -6081,7 +6083,6 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     posts?: PostUncheckedUpdateManyWithoutTrendNestedInput
   }
@@ -6091,7 +6092,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description?: string | null
-    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6100,7 +6100,6 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6109,7 +6108,6 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6118,6 +6116,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutPostsInput
     trend?: TrendCreateNestedOneWithoutPostsInput
@@ -6130,6 +6129,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -6138,6 +6138,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutPostsNestedInput
     trend?: TrendUpdateOneWithoutPostsNestedInput
@@ -6150,6 +6151,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6160,6 +6162,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -6168,6 +6171,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6178,6 +6182,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6220,9 +6225,10 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type ProfileNullableScalarRelationFilter = {
-    is?: ProfileWhereInput | null
-    isNot?: ProfileWhereInput | null
+  export type ProfileListRelationFilter = {
+    every?: ProfileWhereInput
+    some?: ProfileWhereInput
+    none?: ProfileWhereInput
   }
 
   export type PostListRelationFilter = {
@@ -6234,6 +6240,10 @@ export namespace Prisma {
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
+  }
+
+  export type ProfileOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type PostOrderByRelationAggregateInput = {
@@ -6312,6 +6322,11 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -6320,28 +6335,42 @@ export namespace Prisma {
   export type ProfileCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    identity?: SortOrder
+    identityName?: SortOrder
+    identityRole?: SortOrder
     targetPlatforms?: SortOrder
     niche?: SortOrder
     tone?: SortOrder
+    isActive?: SortOrder
   }
 
   export type ProfileMaxOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    identity?: SortOrder
+    identityName?: SortOrder
+    identityRole?: SortOrder
     targetPlatforms?: SortOrder
     niche?: SortOrder
     tone?: SortOrder
+    isActive?: SortOrder
   }
 
   export type ProfileMinOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    identity?: SortOrder
+    identityName?: SortOrder
+    identityRole?: SortOrder
     targetPlatforms?: SortOrder
     niche?: SortOrder
     tone?: SortOrder
+    isActive?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type TrendCountOrderByAggregateInput = {
@@ -6349,7 +6378,6 @@ export namespace Prisma {
     platform?: SortOrder
     headline?: SortOrder
     description?: SortOrder
-    metadata?: SortOrder
     discoveredAt?: SortOrder
   }
 
@@ -6358,7 +6386,6 @@ export namespace Prisma {
     platform?: SortOrder
     headline?: SortOrder
     description?: SortOrder
-    metadata?: SortOrder
     discoveredAt?: SortOrder
   }
 
@@ -6367,8 +6394,18 @@ export namespace Prisma {
     platform?: SortOrder
     headline?: SortOrder
     description?: SortOrder
-    metadata?: SortOrder
     discoveredAt?: SortOrder
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type TrendNullableScalarRelationFilter = {
@@ -6383,6 +6420,7 @@ export namespace Prisma {
     platformTarget?: SortOrder
     content?: SortOrder
     status?: SortOrder
+    scheduledFor?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -6393,6 +6431,7 @@ export namespace Prisma {
     platformTarget?: SortOrder
     content?: SortOrder
     status?: SortOrder
+    scheduledFor?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -6403,13 +6442,29 @@ export namespace Prisma {
     platformTarget?: SortOrder
     content?: SortOrder
     status?: SortOrder
+    scheduledFor?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type ProfileCreateNestedOneWithoutUserInput = {
-    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
-    connect?: ProfileWhereUniqueInput
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type ProfileCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput> | ProfileCreateWithoutUserInput[] | ProfileUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput | ProfileCreateOrConnectWithoutUserInput[]
+    createMany?: ProfileCreateManyUserInputEnvelope
+    connect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
   }
 
   export type PostCreateNestedManyWithoutUserInput = {
@@ -6419,10 +6474,11 @@ export namespace Prisma {
     connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
   }
 
-  export type ProfileUncheckedCreateNestedOneWithoutUserInput = {
-    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
-    connect?: ProfileWhereUniqueInput
+  export type ProfileUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput> | ProfileCreateWithoutUserInput[] | ProfileUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput | ProfileCreateOrConnectWithoutUserInput[]
+    createMany?: ProfileCreateManyUserInputEnvelope
+    connect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
   }
 
   export type PostUncheckedCreateNestedManyWithoutUserInput = {
@@ -6444,14 +6500,18 @@ export namespace Prisma {
     set?: Date | string
   }
 
-  export type ProfileUpdateOneWithoutUserNestedInput = {
-    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
-    upsert?: ProfileUpsertWithoutUserInput
-    disconnect?: ProfileWhereInput | boolean
-    delete?: ProfileWhereInput | boolean
-    connect?: ProfileWhereUniqueInput
-    update?: XOR<XOR<ProfileUpdateToOneWithWhereWithoutUserInput, ProfileUpdateWithoutUserInput>, ProfileUncheckedUpdateWithoutUserInput>
+  export type ProfileUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput> | ProfileCreateWithoutUserInput[] | ProfileUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput | ProfileCreateOrConnectWithoutUserInput[]
+    upsert?: ProfileUpsertWithWhereUniqueWithoutUserInput | ProfileUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProfileCreateManyUserInputEnvelope
+    set?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    disconnect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    delete?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    connect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    update?: ProfileUpdateWithWhereUniqueWithoutUserInput | ProfileUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProfileUpdateManyWithWhereWithoutUserInput | ProfileUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProfileScalarWhereInput | ProfileScalarWhereInput[]
   }
 
   export type PostUpdateManyWithoutUserNestedInput = {
@@ -6468,14 +6528,18 @@ export namespace Prisma {
     deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
   }
 
-  export type ProfileUncheckedUpdateOneWithoutUserNestedInput = {
-    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
-    upsert?: ProfileUpsertWithoutUserInput
-    disconnect?: ProfileWhereInput | boolean
-    delete?: ProfileWhereInput | boolean
-    connect?: ProfileWhereUniqueInput
-    update?: XOR<XOR<ProfileUpdateToOneWithWhereWithoutUserInput, ProfileUpdateWithoutUserInput>, ProfileUncheckedUpdateWithoutUserInput>
+  export type ProfileUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput> | ProfileCreateWithoutUserInput[] | ProfileUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileCreateOrConnectWithoutUserInput | ProfileCreateOrConnectWithoutUserInput[]
+    upsert?: ProfileUpsertWithWhereUniqueWithoutUserInput | ProfileUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProfileCreateManyUserInputEnvelope
+    set?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    disconnect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    delete?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    connect?: ProfileWhereUniqueInput | ProfileWhereUniqueInput[]
+    update?: ProfileUpdateWithWhereUniqueWithoutUserInput | ProfileUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProfileUpdateManyWithWhereWithoutUserInput | ProfileUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProfileScalarWhereInput | ProfileScalarWhereInput[]
   }
 
   export type PostUncheckedUpdateManyWithoutUserNestedInput = {
@@ -6492,18 +6556,22 @@ export namespace Prisma {
     deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
   }
 
-  export type UserCreateNestedOneWithoutProfileInput = {
-    create?: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
-    connectOrCreate?: UserCreateOrConnectWithoutProfileInput
+  export type UserCreateNestedOneWithoutIdentitiesInput = {
+    create?: XOR<UserCreateWithoutIdentitiesInput, UserUncheckedCreateWithoutIdentitiesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutIdentitiesInput
     connect?: UserWhereUniqueInput
   }
 
-  export type UserUpdateOneRequiredWithoutProfileNestedInput = {
-    create?: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
-    connectOrCreate?: UserCreateOrConnectWithoutProfileInput
-    upsert?: UserUpsertWithoutProfileInput
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type UserUpdateOneRequiredWithoutIdentitiesNestedInput = {
+    create?: XOR<UserCreateWithoutIdentitiesInput, UserUncheckedCreateWithoutIdentitiesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutIdentitiesInput
+    upsert?: UserUpsertWithoutIdentitiesInput
     connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProfileInput, UserUpdateWithoutProfileInput>, UserUncheckedUpdateWithoutProfileInput>
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutIdentitiesInput, UserUpdateWithoutIdentitiesInput>, UserUncheckedUpdateWithoutIdentitiesInput>
   }
 
   export type PostCreateNestedManyWithoutTrendInput = {
@@ -6558,6 +6626,10 @@ export namespace Prisma {
     create?: XOR<TrendCreateWithoutPostsInput, TrendUncheckedCreateWithoutPostsInput>
     connectOrCreate?: TrendCreateOrConnectWithoutPostsInput
     connect?: TrendWhereUniqueInput
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type UserUpdateOneRequiredWithoutPostsNestedInput = {
@@ -6687,20 +6759,62 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type ProfileCreateWithoutUserInput = {
     id?: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone?: string | null
+    isActive?: boolean
   }
 
   export type ProfileUncheckedCreateWithoutUserInput = {
     id?: string
-    identity: string
+    identityName: string
+    identityRole: string
     targetPlatforms: string
     niche: string
     tone?: string | null
+    isActive?: boolean
   }
 
   export type ProfileCreateOrConnectWithoutUserInput = {
@@ -6708,11 +6822,16 @@ export namespace Prisma {
     create: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
   }
 
+  export type ProfileCreateManyUserInputEnvelope = {
+    data: ProfileCreateManyUserInput | ProfileCreateManyUserInput[]
+  }
+
   export type PostCreateWithoutUserInput = {
     id?: string
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
     trend?: TrendCreateNestedOneWithoutPostsInput
   }
@@ -6723,6 +6842,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -6735,31 +6855,34 @@ export namespace Prisma {
     data: PostCreateManyUserInput | PostCreateManyUserInput[]
   }
 
-  export type ProfileUpsertWithoutUserInput = {
+  export type ProfileUpsertWithWhereUniqueWithoutUserInput = {
+    where: ProfileWhereUniqueInput
     update: XOR<ProfileUpdateWithoutUserInput, ProfileUncheckedUpdateWithoutUserInput>
     create: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
-    where?: ProfileWhereInput
   }
 
-  export type ProfileUpdateToOneWithWhereWithoutUserInput = {
-    where?: ProfileWhereInput
+  export type ProfileUpdateWithWhereUniqueWithoutUserInput = {
+    where: ProfileWhereUniqueInput
     data: XOR<ProfileUpdateWithoutUserInput, ProfileUncheckedUpdateWithoutUserInput>
   }
 
-  export type ProfileUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
-    targetPlatforms?: StringFieldUpdateOperationsInput | string
-    niche?: StringFieldUpdateOperationsInput | string
-    tone?: NullableStringFieldUpdateOperationsInput | string | null
+  export type ProfileUpdateManyWithWhereWithoutUserInput = {
+    where: ProfileScalarWhereInput
+    data: XOR<ProfileUpdateManyMutationInput, ProfileUncheckedUpdateManyWithoutUserInput>
   }
 
-  export type ProfileUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    identity?: StringFieldUpdateOperationsInput | string
-    targetPlatforms?: StringFieldUpdateOperationsInput | string
-    niche?: StringFieldUpdateOperationsInput | string
-    tone?: NullableStringFieldUpdateOperationsInput | string | null
+  export type ProfileScalarWhereInput = {
+    AND?: ProfileScalarWhereInput | ProfileScalarWhereInput[]
+    OR?: ProfileScalarWhereInput[]
+    NOT?: ProfileScalarWhereInput | ProfileScalarWhereInput[]
+    id?: StringFilter<"Profile"> | string
+    userId?: StringFilter<"Profile"> | string
+    identityName?: StringFilter<"Profile"> | string
+    identityRole?: StringFilter<"Profile"> | string
+    targetPlatforms?: StringFilter<"Profile"> | string
+    niche?: StringFilter<"Profile"> | string
+    tone?: StringNullableFilter<"Profile"> | string | null
+    isActive?: BoolFilter<"Profile"> | boolean
   }
 
   export type PostUpsertWithWhereUniqueWithoutUserInput = {
@@ -6788,10 +6911,11 @@ export namespace Prisma {
     platformTarget?: StringFilter<"Post"> | string
     content?: StringFilter<"Post"> | string
     status?: StringFilter<"Post"> | string
+    scheduledFor?: DateTimeNullableFilter<"Post"> | Date | string | null
     createdAt?: DateTimeFilter<"Post"> | Date | string
   }
 
-  export type UserCreateWithoutProfileInput = {
+  export type UserCreateWithoutIdentitiesInput = {
     id?: string
     email: string
     name?: string | null
@@ -6800,7 +6924,7 @@ export namespace Prisma {
     posts?: PostCreateNestedManyWithoutUserInput
   }
 
-  export type UserUncheckedCreateWithoutProfileInput = {
+  export type UserUncheckedCreateWithoutIdentitiesInput = {
     id?: string
     email: string
     name?: string | null
@@ -6809,23 +6933,23 @@ export namespace Prisma {
     posts?: PostUncheckedCreateNestedManyWithoutUserInput
   }
 
-  export type UserCreateOrConnectWithoutProfileInput = {
+  export type UserCreateOrConnectWithoutIdentitiesInput = {
     where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
+    create: XOR<UserCreateWithoutIdentitiesInput, UserUncheckedCreateWithoutIdentitiesInput>
   }
 
-  export type UserUpsertWithoutProfileInput = {
-    update: XOR<UserUpdateWithoutProfileInput, UserUncheckedUpdateWithoutProfileInput>
-    create: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
+  export type UserUpsertWithoutIdentitiesInput = {
+    update: XOR<UserUpdateWithoutIdentitiesInput, UserUncheckedUpdateWithoutIdentitiesInput>
+    create: XOR<UserCreateWithoutIdentitiesInput, UserUncheckedCreateWithoutIdentitiesInput>
     where?: UserWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutProfileInput = {
+  export type UserUpdateToOneWithWhereWithoutIdentitiesInput = {
     where?: UserWhereInput
-    data: XOR<UserUpdateWithoutProfileInput, UserUncheckedUpdateWithoutProfileInput>
+    data: XOR<UserUpdateWithoutIdentitiesInput, UserUncheckedUpdateWithoutIdentitiesInput>
   }
 
-  export type UserUpdateWithoutProfileInput = {
+  export type UserUpdateWithoutIdentitiesInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6834,7 +6958,7 @@ export namespace Prisma {
     posts?: PostUpdateManyWithoutUserNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutProfileInput = {
+  export type UserUncheckedUpdateWithoutIdentitiesInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
@@ -6848,6 +6972,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutPostsInput
   }
@@ -6858,6 +6983,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -6892,7 +7018,7 @@ export namespace Prisma {
     name?: string | null
     password: string
     createdAt?: Date | string
-    profile?: ProfileCreateNestedOneWithoutUserInput
+    identities?: ProfileCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPostsInput = {
@@ -6901,7 +7027,7 @@ export namespace Prisma {
     name?: string | null
     password: string
     createdAt?: Date | string
-    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    identities?: ProfileUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPostsInput = {
@@ -6914,7 +7040,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description?: string | null
-    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6923,7 +7048,6 @@ export namespace Prisma {
     platform: string
     headline: string
     description?: string | null
-    metadata?: string | null
     discoveredAt?: Date | string
   }
 
@@ -6949,7 +7073,7 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    profile?: ProfileUpdateOneWithoutUserNestedInput
+    identities?: ProfileUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPostsInput = {
@@ -6958,7 +7082,7 @@ export namespace Prisma {
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    identities?: ProfileUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrendUpsertWithoutPostsInput = {
@@ -6977,7 +7101,6 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6986,8 +7109,17 @@ export namespace Prisma {
     platform?: StringFieldUpdateOperationsInput | string
     headline?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     discoveredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileCreateManyUserInput = {
+    id?: string
+    identityName: string
+    identityRole: string
+    targetPlatforms: string
+    niche: string
+    tone?: string | null
+    isActive?: boolean
   }
 
   export type PostCreateManyUserInput = {
@@ -6996,7 +7128,38 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
+  }
+
+  export type ProfileUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
+    targetPlatforms?: StringFieldUpdateOperationsInput | string
+    niche?: StringFieldUpdateOperationsInput | string
+    tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type ProfileUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
+    targetPlatforms?: StringFieldUpdateOperationsInput | string
+    niche?: StringFieldUpdateOperationsInput | string
+    tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type ProfileUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identityName?: StringFieldUpdateOperationsInput | string
+    identityRole?: StringFieldUpdateOperationsInput | string
+    targetPlatforms?: StringFieldUpdateOperationsInput | string
+    niche?: StringFieldUpdateOperationsInput | string
+    tone?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type PostUpdateWithoutUserInput = {
@@ -7004,6 +7167,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     trend?: TrendUpdateOneWithoutPostsNestedInput
   }
@@ -7014,6 +7178,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7023,6 +7188,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7032,6 +7198,7 @@ export namespace Prisma {
     platformTarget: string
     content: string
     status?: string
+    scheduledFor?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -7040,6 +7207,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutPostsNestedInput
   }
@@ -7050,6 +7218,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7059,6 +7228,7 @@ export namespace Prisma {
     platformTarget?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

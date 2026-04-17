@@ -1,0 +1,56 @@
+import fs from 'fs';
+const schema = `generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  name       String?
+  password   String
+  createdAt  DateTime @default(now())
+  identities Profile[]
+  posts      Post[]
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityName    String
+  identityRole    String
+  targetPlatforms String
+  niche           String
+  tone            String?
+  isActive        Boolean  @default(false)
+}
+
+model Trend {
+  id           String   @id @default(uuid())
+  platform     String
+  headline     String
+  description  String?
+  discoveredAt DateTime @default(now())
+  posts        Post[]
+}
+
+model Post {
+  id             String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trendId        String?
+  trend          Trend?   @relation(fields: [trendId], references: [id])
+  platformTarget String
+  content        String
+  status         String   @default("Draft")
+  scheduledFor   DateTime?
+  createdAt      DateTime @default(now())
+}
+`;
+fs.writeFileSync('prisma/schema.prisma', schema);
+console.log('Schema written successfully');

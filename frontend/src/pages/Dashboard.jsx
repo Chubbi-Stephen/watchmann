@@ -1,61 +1,38 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  TrendingUp, 
-  Zap, 
-  Copy, 
-  Check, 
-  Calendar, 
-  LayoutDashboard, 
-  History, 
-  Settings,
-  LogOut,
-  RefreshCw,
-  Sparkles,
-  ArrowRight,
-  X,
-  ExternalLink,
-  Save,
-  Menu,
-  Eye,
-  User,
-  Hash,
-  MessageSquare,
-  Globe,
-  Activity
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
+} from 'recharts';
+import { 
+  TrendingUp, Zap, Copy, Check, Calendar, LayoutDashboard, History, Settings,
+  LogOut, RefreshCw, Sparkles, ArrowRight, X, User, BarChart3, Clock, ChevronRight, Infinity as InfinityIcon
 } from 'lucide-react';
 import api from '../lib/api';
 
 const Dashboard = ({ user, setUser }) => {
   const [trends, setTrends] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [archivePosts, setArchivePosts] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [generating, setGenerating] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
-  const [editingPost, setEditingPost] = useState(null);
-  const [toast, setToast] = useState(null);
   const [studioOpen, setStudioOpen] = useState(false);
   const [studioTrendId, setStudioTrendId] = useState(null);
-
-  const [settingsData, setSettingsData] = useState({
-    identity: user?.profile?.identity || '',
-    niche: user?.profile?.niche || '',
-    tone: user?.profile?.tone || '',
-    targetPlatforms: user?.profile?.targetPlatforms || []
-  });
-  const [savingSettings, setSavingSettings] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [trendRes, postRes] = await Promise.all([
+      const [trendRes, postRes, analyticsRes] = await Promise.all([
         api.get('/trends'),
-        api.get('/posts')
+        api.get('/posts'),
+        api.get('/analytics')
       ]);
       setTrends(trendRes.data.trends);
       setPosts(postRes.data.posts);
+      setAnalytics(analyticsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,27 +40,9 @@ const Dashboard = ({ user, setUser }) => {
     }
   }, []);
 
-  const fetchArchiveData = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/posts/all');
-      setArchivePosts(res.data.posts);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (activeTab === 'dashboard') fetchDashboardData();
-    if (activeTab === 'archive') fetchArchiveData();
-  }, [activeTab, fetchDashboardData]);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleGenerate = async (trendId) => {
     setGenerating(trendId);
@@ -92,31 +51,11 @@ const Dashboard = ({ user, setUser }) => {
       await fetchDashboardData();
       setStudioTrendId(trendId);
       setStudioOpen(true);
-      showToast("Strategy Architected");
     } catch (err) {
-      showToast("Sync Error", "error");
+      console.error(err);
     } finally {
       setGenerating(null);
     }
-  };
-
-  const handleUpdatePost = async () => {
-    if (!editingPost) return;
-    try {
-      await api.patch(`/posts/${editingPost.id}`, { content: editingPost.content });
-      showToast("Node Updated");
-      setEditingPost(null);
-      fetchDashboardData();
-    } catch (err) {
-       showToast("Sync Failure", "error");
-    }
-  };
-
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    showToast("Buffer Copied");
-    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleLogout = () => {
@@ -124,92 +63,247 @@ const Dashboard = ({ user, setUser }) => {
     window.location.href = '/';
   };
 
-  const handleSaveSettings = async (e) => {
-    e.preventDefault();
-    setSavingSettings(true);
-    try {
-      const res = await api.post('/profile/setup', settingsData);
-      setUser({ ...user, profile: res.data.profile });
-      showToast("System Recalibrated");
-    } catch (err) {
-      showToast("Save Failed", "error");
-    } finally {
-      setSavingSettings(false);
-    }
-  };
-
   const studioPosts = useMemo(() => {
-    if (studioTrendId) {
-      return posts.filter(p => p.trendId === studioTrendId);
-    }
+    if (studioTrendId) return posts.filter(p => p.trendId === studioTrendId);
     return posts;
   }, [posts, studioTrendId]);
 
   return (
-    <div className="min-h-screen flex bg-surface text-slate-400 font-inter selection:bg-primary/40 selection:text-black antialiased">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex w-72 border-r border-white/5 flex-col p-8 sticky top-0 h-screen z-40 bg-surface">
-        <div className="flex items-center gap-4 font-extrabold text-2xl text-primary mb-16 tracking-tighter cursor-pointer group">
-          <img src="/logo.png" alt="Watchmann Infinity Logo" className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" /> 
-          <span className="group-hover:tracking-widest transition-all duration-700">Watchmann</span>
+    <div className="min-h-screen flex bg-surface text-slate-400 font-inter selection:bg-primary/30 relative">
+      <div className="fixed inset-0 grid-overlay opacity-30 pointer-events-none" />
+      
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-[60] px-8 py-5 flex justify-between items-center bg-surface/80 backdrop-blur-xl border-b border-white/5">
+        <div className="flex items-center gap-4 font-black text-xl text-white tracking-tighter">
+          <img src="/logo.png" alt="W/M" className="w-8 h-8" /> 
+          <span>Watchmann</span>
+        </div>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-4 bg-white/5 rounded-2xl text-primary border border-white/5">
+          {mobileMenuOpen ? <X size={24} /> : <div className="flex flex-col gap-1.5 w-6"><div className="h-0.5 w-full bg-primary/60 rounded-full"></div><div className="h-0.5 w-full bg-primary/60 rounded-full"></div><div className="h-0.5 w-full bg-primary/60 rounded-full"></div></div>}
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Navigation */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileMenuOpen(false)} className="fixed inset-0 bg-black/95 z-[70] backdrop-blur-3xl" />
+            <motion.aside initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-surface/50 backdrop-blur-3xl z-[80] border-r border-white/5 p-12 flex flex-col pt-32">
+              <nav className="flex-1 space-y-6">
+                <SidebarItem icon={<LayoutDashboard size={20} />} label="Operational" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }} />
+                <SidebarItem icon={<BarChart3 size={20} />} label="Telemetry" active={activeTab === 'analytics'} onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false); }} />
+                <SidebarItem icon={<History size={20} />} label="Archive" active={activeTab === 'archive'} onClick={() => { setActiveTab('archive'); setMobileMenuOpen(false); }} />
+                <SidebarItem icon={<Settings size={20} />} label="Command Core" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }} />
+              </nav>
+              <button onClick={handleLogout} className="flex items-center gap-6 p-6 text-slate-800 font-bold uppercase tracking-[0.4em] text-[10px] mt-auto hover:text-red-500 transition-colors">
+                <LogOut size={18} /> <span>Abort Link</span>
+              </button>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Persistent Command Sidebar */}
+      <aside className="hidden lg:flex w-72 border-r border-white/5 flex-col p-8 lg:p-10 sticky top-0 h-screen z-40 bg-surface/20 backdrop-blur-[120px]">
+        <div className="flex items-center gap-5 font-black text-2xl text-white tracking-tighter mb-24 group cursor-pointer transition-all">
+          <div className="relative">
+             <img src="/logo.png" alt="W/M" className="w-10 h-10 group-hover:rotate-12 transition-transform duration-500" /> 
+             <div className="absolute inset-0 bg-primary/20 blur-xl scale-0 group-hover:scale-125 transition-all opacity-0 group-hover:opacity-100" />
+          </div>
+          <span>WATCHMANN</span>
         </div>
         
-        <nav className="flex-1 space-y-3">
-          <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <SidebarItem icon={<Sparkles size={20} />} label="Studio" active={studioOpen} onClick={() => { setStudioTrendId(null); setStudioOpen(true); }} />
+        <nav className="flex-1 space-y-6">
+          <SidebarItem icon={<LayoutDashboard size={20} />} label="Operational" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+          <SidebarItem icon={<BarChart3 size={20} />} label="Telemetry" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
           <SidebarItem icon={<History size={20} />} label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} />
-          <SidebarItem icon={<Settings size={20} />} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          <SidebarItem icon={<Settings size={20} />} label="Command Core" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
         </nav>
 
-        <button onClick={handleLogout} className="flex items-center gap-4 p-4 text-slate-600 hover:text-red-500 transition-all mt-auto rounded-xl hover:bg-red-500/5 group text-xs font-bold uppercase tracking-widest">
-          <LogOut size={18} /> <span>Disconnect</span>
+        <div className="mt-auto mb-10 p-8 premium-card space-y-6 !p-6 border-white/5">
+          <div className="label-caps !mb-4">Active Profile</div>
+          <div className="flex items-center gap-5">
+             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary border border-white/5 shadow-inner"><User size={20} /></div>
+             <div>
+               <div className="text-white font-bold text-sm uppercase tracking-tight">{user?.identities?.[0]?.identityName || 'PRIMARY'}</div>
+               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.2em]">{user?.identities?.[0]?.niche || 'TECH'} SECTOR</div>
+             </div>
+          </div>
+        </div>
+
+        <button onClick={handleLogout} className="flex items-center gap-6 p-6 text-slate-800 font-bold uppercase tracking-[0.4em] text-[11px] hover:text-red-500 transition-all rounded-2xl hover:bg-red-500/5">
+          <LogOut size={18} /> <span>Abort Link</span>
         </button>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-12 lg:p-20 xl:p-24 max-w-[1500px] mx-auto w-full pt-32 lg:pt-28 min-h-screen relative overflow-x-hidden">
+      <main className="flex-1 p-6 md:p-10 lg:p-16 xl:p-24 max-w-[1700px] mx-auto w-full pt-32 lg:pt-24 min-h-screen relative z-10 overflow-x-hidden">
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
-            <motion.div key="dash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-20">
-              <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
-                <div className="space-y-4">
-                  <h1 className="text-6xl md:text-8xl font-black text-white leading-tight tracking-tighter">
-                    Hello, <span className="text-primary">{user?.name?.split(' ')[0]}</span>
+            <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-24">
+              <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+                <div className="space-y-6">
+                  <h1 className="text-super-scale italic">
+                    Ready, <span className="text-primary not-italic underline decoration-white/5 decoration-[12px] underline-offset-[12px]">NODE</span>
                   </h1>
-                  <p className="text-slate-500 text-lg font-medium tracking-wide uppercase opacity-70">
-                    System Hub: {user?.profile?.niche} Active
-                  </p>
+                  <div className="flex items-center gap-5 text-slate-600 font-bold uppercase tracking-[0.4em] text-[10px]">
+                    <div className="flex gap-1.5 h-3 items-end">
+                      {[1,2,3].map(i => <motion.div key={i} animate={{height: [4, 12, 4]}} transition={{duration: 0.6 + (i*0.2), repeat: Infinity}} className="w-1 bg-primary/40 rounded-full" />)}
+                    </div>
+                    Neural Synchronisation Stable
+                  </div>
                 </div>
-                <button onClick={fetchDashboardData} className="w-full md:w-auto px-8 py-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] transition-all flex items-center justify-center gap-4 group">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">Sync Data</span>
-                  <RefreshCw size={18} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700 text-primary'} />
+                <button onClick={fetchDashboardData} className="w-full md:w-auto px-10 py-6 glass rounded-2xl hover:bg-white/[0.04] flex items-center justify-center gap-5 group">
+                  <RefreshCw size={20} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000 text-primary'} />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Resync Intercept</span>
                 </button>
               </header>
-              <div className="grid grid-cols-1 gap-10">
-                {trends.map((trend, idx) => (
-                  <TrendCard key={trend.id} trend={trend} idx={idx} generating={generating} onGenerate={handleGenerate} />
-                ))}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-8 lg:gap-12">
+                {/* Pulse Ingestion Feed */}
+                <div className="lg:col-span-2 xl:col-span-3 space-y-12">
+                  <div className="flex items-center justify-between gap-10">
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic shrink-0">Pulse Intercept</h2>
+                    <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-transparent"></div>
+                    <div className="px-6 py-2 rounded-full border border-primary/20 text-[9px] font-bold text-primary uppercase tracking-[0.4em] italic">Active Scan</div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-10">
+                    {trends.map((trend, idx) => (
+                      <TrendCard key={trend.id} trend={trend} idx={idx} generating={generating} onGenerate={handleGenerate} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Secondary Command Nodes */}
+                <div className="lg:col-span-1 xl:col-span-2 space-y-8 lg:space-y-12">
+                   <div className="premium-card space-y-8 !p-8">
+                      <div className="flex items-center gap-4 text-white border-b border-white/5 pb-6">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                          <Calendar size={18} className="text-primary" />
+                        </div>
+                        <h3 className="text-lg font-bold uppercase tracking-widest italic">Relay Slat</h3>
+                      </div>
+                      <div className="space-y-4">
+                        {posts.filter(p => p.status === 'Scheduled').slice(0, 3).map(post => (
+                          <div key={post.id} className="group flex justify-between items-center p-5 rounded-2xl bg-surface/40 border border-white/5 hover:border-primary/30 transition-colors">
+                            <div className="space-y-1">
+                               <div className="flex items-center gap-3">
+                                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                 <span className="text-[11px] font-extrabold text-white uppercase tracking-wider italic">{post.platformTarget} HUB</span>
+                               </div>
+                               <div className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.3em] ml-5">T-Minus Routing...</div>
+                            </div>
+                            <Clock size={16} className="text-primary/40 group-hover:text-primary transition-colors" />
+                          </div>
+                        ))}
+                        {posts.filter(p => p.status === 'Scheduled').length === 0 && (
+                          <div className="text-center py-12 rounded-2xl border border-dashed border-white/10 bg-surface/20">
+                             <InfinityIcon className="mx-auto text-slate-600 mb-4" size={24} />
+                             <div className="text-[9px] font-bold uppercase tracking-[0.4em] text-slate-500">No Live Slats</div>
+                          </div>
+                        )}
+                        <button className="w-full pt-4 text-[10px] font-extrabold uppercase tracking-[0.5em] text-slate-600 hover:text-primary transition-colors">Operational Vault</button>
+                      </div>
+                   </div>
+
+                   <div className="premium-card space-y-8 !p-8">
+                      <div className="flex items-center gap-4 text-white border-b border-white/5 pb-6">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                          <TrendingUp size={18} className="text-primary" />
+                        </div>
+                        <h3 className="text-lg font-bold uppercase tracking-widest italic">Efficiency</h3>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                         <div className="p-6 bg-surface/40 hover:bg-surface/60 border border-white/5 hover:border-white/10 transition-colors rounded-2xl flex justify-between items-center group">
+                            <div className="space-y-1">
+                               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Signals</div>
+                               <div className="text-2xl font-black text-white">{analytics?.metrics?.totalPosts || 0}</div>
+                            </div>
+                            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <BarChart3 size={20} className="text-slate-400 group-hover:text-white" />
+                            </div>
+                         </div>
+                         <div className="p-6 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30 transition-colors rounded-2xl flex justify-between items-center group shadow-[0_0_20px_rgba(190,242,100,0.02)]">
+                            <div className="space-y-1">
+                               <div className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Impact Avg</div>
+                               <div className="text-2xl font-black text-primary italic">{analytics?.metrics?.viralityAvg || 0}%</div>
+                            </div>
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                              <Zap size={20} className="text-primary" fill="currentColor" />
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
               </div>
             </motion.div>
           )}
 
+          {activeTab === 'analytics' && (
+            <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24">
+               <header className="space-y-6">
+                  <h1 className="text-super-scale italic underline decoration-white/5 decoration-[12px] underline-offset-[12px]">Telemetry</h1>
+                  <p className="text-slate-600 font-bold uppercase tracking-[0.5em] text-sm">Signal Performance Visualisation Protocol.</p>
+               </header>
+
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                  <div className="premium-card !p-12 space-y-12">
+                     <h3 className="text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-5">
+                       <BarChart3 size={24} className="text-primary" /> Sector Reach
+                     </h3>
+                     <div className="h-[400px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                           <BarChart data={analytics?.platformData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#475569', fontWeight: 700 }} />
+                              <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#475569', fontWeight: 700 }} />
+                              <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#080808', border: '1px solid #ffffff10', borderRadius: '16px', fontSize: '11px', color: '#fff', fontWeight: 700, textTransform: 'uppercase' }} />
+                              <Bar dataKey="value" fill="#bef264" radius={[6, 6, 0, 0]} barSize={40} />
+                           </BarChart>
+                        </ResponsiveContainer>
+                     </div>
+                  </div>
+
+                  <div className="premium-card !p-12 space-y-12">
+                     <h3 className="text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-5">
+                       <TrendingUp size={24} className="text-primary" /> Transmission Velocity
+                     </h3>
+                     <div className="h-[300px] md:h-[400px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                           <AreaChart data={analytics?.activityData}>
+                              <defs>
+                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#bef264" stopOpacity={0.2}/>
+                                  <stop offset="95%" stopColor="#bef264" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#475569', fontWeight: 700 }} />
+                              <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#475569', fontWeight: 700 }} />
+                              <Tooltip contentStyle={{ backgroundColor: '#080808', border: '1px solid #ffffff10', borderRadius: '16px', fontSize: '11px', color: '#fff', fontWeight: 700, textTransform: 'uppercase' }} />
+                              <Area type="monotone" dataKey="count" stroke="#bef264" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" />
+                           </AreaChart>
+                        </ResponsiveContainer>
+                     </div>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+
           {activeTab === 'archive' && (
-            <motion.div key="archive" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-20">
-              <header className="space-y-4">
-                <h1 className="text-7xl font-black text-white tracking-tighter">Vault <span className="text-slate-700 italic">History</span></h1>
-                <p className="text-slate-500 font-medium uppercase tracking-[0.2em] text-xs">A logs of all historical generation nodes.</p>
-              </header>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {archivePosts.map((post, idx) => (
-                  <motion.div key={post.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }} className="glass p-8 border-white/5 hover:border-primary/20 transition-all flex flex-col gap-6">
+            <motion.div key="archive" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24">
+               <header className="space-y-6">
+                 <h1 className="text-super-scale italic uppercase">Archives</h1>
+                 <p className="text-slate-600 font-bold uppercase tracking-[0.5em] text-sm">Deep Ingestion Vault: Historical Matrix Records.</p>
+               </header>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {posts.map((post, idx) => (
+                  <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="premium-card flex flex-col gap-10 group h-full">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{post.platformTarget}</span>
-                      <button onClick={() => copyToClipboard(post.content, post.id)} className="p-2 text-slate-600 hover:text-white transition-all transform hover:scale-110">
-                        {copiedId === post.id ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
-                      </button>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60 italic">{post.platformTarget} PROTOCOL</span>
+                      <div className={`text-[9px] font-bold uppercase tracking-[0.4em] px-4 py-2 rounded-full ${post.status === 'Live' ? 'text-primary bg-primary/10' : 'text-slate-700 bg-white/5'}`}>{post.status}</div>
                     </div>
-                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-6">"{post.content}"</p>
-                    <div className="text-[9px] text-slate-700 font-bold uppercase mt-auto">{new Date(post.createdAt).toLocaleDateString()}</div>
+                    <p className="text-slate-300 text-base leading-relaxed font-medium italic group-hover:not-italic transition-all line-clamp-8 px-2 lowercase first-letter:uppercase">"{post.content}"</p>
+                    <div className="text-[10px] text-slate-800 font-extrabold uppercase tracking-[0.2em] mt-auto pt-8 border-t border-white/5 opacity-40">{new Date(post.createdAt).toLocaleDateString()} TS_RECORD</div>
                   </motion.div>
                 ))}
               </div>
@@ -217,165 +311,120 @@ const Dashboard = ({ user, setUser }) => {
           )}
 
           {activeTab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-3xl space-y-24">
-              <header className="space-y-4">
-                <h1 className="text-7xl font-black text-white tracking-tighter italic">Calibration</h1>
-                <p className="text-slate-500 font-medium uppercase tracking-[0.2em] text-xs">Define your operational parameters.</p>
+            <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-5xl space-y-32">
+              <header className="space-y-6">
+                <h1 className="text-super-scale italic uppercase">Calibrate</h1>
+                <p className="text-slate-600 font-bold uppercase tracking-[0.5em] text-sm">Node Parameter Management & Active Signatures.</p>
               </header>
-              <form onSubmit={handleSaveSettings} className="space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Operator Identity</label>
-                    <input value={settingsData.identity} onChange={e => setSettingsData({...settingsData, identity: e.target.value})} className="settings-input" />
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Market Domain</label>
-                    <input value={settingsData.identity} onChange={e => setSettingsData({...settingsData, identity: e.target.value})} className="settings-input" />
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Transmission Tone</label>
-                    <input value={settingsData.tone} onChange={e => setSettingsData({...settingsData, tone: e.target.value})} className="settings-input" />
-                  </div>
-                </div>
-                <button disabled={savingSettings} type="submit" className="glow-btn px-12 py-5 text-[11px] font-bold uppercase tracking-[0.3em]">
-                  {savingSettings ? 'Writing to Disk...' : 'Commit Changes'}
-                </button>
-              </form>
+              
+              <div className="space-y-16">
+                 <div className="label-caps !mb-12 flex items-center gap-6 text-primary">Operational Personas <div className="h-[1px] flex-1 bg-gradient-to-r from-primary/10 to-transparent" /></div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    {user?.identities?.map(identity => (
+                      <div key={identity.id} className={`premium-card !p-10 flex items-center justify-between transition-all duration-700 group cursor-pointer ${identity.isActive ? 'border-primary/40 bg-primary/[0.02]' : ''}`}>
+                         <div className="flex items-center gap-8">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${identity.isActive ? 'bg-primary text-black shadow-[0_0_30px_#bef264]' : 'bg-white/5 text-slate-800'}`}>
+                              <User size={24} />
+                            </div>
+                            <div>
+                               <div className="text-white font-bold text-xl uppercase tracking-tighter">{identity.identityName}</div>
+                               <div className="text-[10px] text-slate-700 font-bold uppercase tracking-[0.3em]">{identity.identityRole}</div>
+                            </div>
+                         </div>
+                         {identity.isActive && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />}
+                      </div>
+                    ))}
+                    <button className="premium-card !border-dashed !border-white/10 flex flex-col items-center justify-center gap-6 text-slate-800 hover:text-white group">
+                       <div className="w-14 h-14 rounded-2xl border border-dashed border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform"><Sparkles size={24} /></div>
+                       <span className="text-[10px] font-bold uppercase tracking-[0.5em]">Establish Node</span>
+                    </button>
+                 </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Pop-ups & Toasts */}
-      <AnimatePresence>
-        {studioOpen && (
-          <StudioPopUp 
-            posts={studioPosts} 
-            onClose={() => { setStudioOpen(false); setStudioTrendId(null); }} 
-            onCopy={copyToClipboard} 
-            copiedId={copiedId} 
-            onEdit={setEditingPost} 
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>{editingPost && <RefinementModal post={editingPost} onClose={() => setEditingPost(null)} setPost={setEditingPost} onCommit={handleUpdatePost} />}</AnimatePresence>
-      <AnimatePresence>{toast && <LethalToast message={toast.message} type={toast.type} onOpenStudio={() => setStudioOpen(true)} />}</AnimatePresence>
-
-      <style>{`
-        .settings-input { width: 100%; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; font-size: 1rem; font-weight: 600; color: white; border-radius: 1rem; outline: none; transition: all 0.3s; }
-        .settings-input:focus { border-color: #bef264; background: rgba(190,242,100,0.02); }
-      `}</style>
+      <AnimatePresence>{studioOpen && <StudioPopUp posts={studioPosts} onClose={() => setStudioOpen(false)} onCopy={() => {}} copiedId={copiedId} onEdit={setEditingPost} />}</AnimatePresence>
     </div>
   );
 };
 
 const TrendCard = ({ trend, idx, generating, onGenerate }) => {
-  const points = useMemo(() => Array.from({length: 12}, () => Math.floor(Math.random() * 30) + 5), [trend.id]);
-  const polylinePoints = points.map((p, i) => `${i * 15},${50 - p}`).join(' ');
-
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }} className="glass p-10 group relative border-white/5 hover:border-primary/20 transition-all duration-500">
-      <div className="absolute top-0 right-0 w-40 h-full opacity-[0.03] pointer-events-none transition-opacity">
-        <svg viewBox="0 0 165 50" className="w-full h-full"><polyline fill="none" stroke="#bef264" strokeWidth="2" points={polylinePoints} /></svg>
-      </div>
-      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-        <div className="space-y-6 flex-1">
-          <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <span className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg">{trend.platform}</span>
-            <span>{new Date(trend.discoveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} SYNC</span>
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.08 }} className="premium-card !p-10 group relative bg-surface/40 overflow-hidden">
+      <div className="relative z-10 flex flex-col justify-between items-start gap-10 w-full">
+        <div className="space-y-6 w-full">
+          <div className="flex flex-wrap items-center gap-6 text-[9px] font-bold uppercase tracking-[0.4em] text-slate-800 group-hover:text-primary transition-colors">
+            <span className="px-4 py-2 border border-white/10 rounded-lg">{trend.platform} Uplink</span>
+            {trend.virality && <span className="text-primary italic">Alpha Inbound: {trend.virality}% Velocity</span>}
           </div>
-          <h3 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight group-hover:text-primary transition-colors">{trend.headline}</h3>
-          <p className="text-slate-500 font-medium text-lg leading-relaxed max-w-3xl">{trend.description}</p>
+          <h3 className="text-3xl lg:text-4xl font-bold text-white leading-tight tracking-tight italic group-hover:not-italic transition-all duration-700">{trend.headline}</h3>
+          <p className="text-slate-500 font-medium text-lg leading-relaxed max-w-4xl group-hover:text-slate-300 transition-colors lowercase first-letter:uppercase">{trend.description}</p>
         </div>
-        <button disabled={generating === trend.id} onClick={() => onGenerate(trend.id)} className="glow-btn px-10 py-5 text-[10px] font-bold uppercase tracking-widest flex items-center gap-3">
-          {generating === trend.id ? 'Analyzing...' : 'Execute Strategy'} <Zap size={16} fill="currentColor" />
-        </button>
+        <div className="w-full pt-6 md:pt-8 border-t border-white/5 flex justify-end">
+          <button disabled={generating === trend.id} onClick={() => onGenerate(trend.id)} className="btn-primary w-full sm:w-auto flex items-center justify-center gap-5">
+            {generating === trend.id ? 'Decrypting...' : 'Forge'} <Zap size={18} fill="currentColor" />
+          </button>
+        </div>
       </div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
     </motion.div>
   );
 };
 
 const SidebarItem = ({ icon, label, active = false, onClick }) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${active ? 'bg-primary/10 text-primary border border-primary/20 shadow-inner' : 'text-slate-600 hover:text-white'}`}>
-    <div className={`transition-all duration-500 ${active ? 'scale-110 text-primary' : 'group-hover:scale-105'}`}>{icon}</div>
-    <span className={`text-[11px] font-bold uppercase tracking-widest ${active ? 'opacity-100' : 'opacity-60'}`}>{label}</span>
+  <button onClick={onClick} className={`w-full flex items-center gap-5 p-5 rounded-2xl transition-all duration-500 group relative overflow-hidden ${active ? 'bg-primary/5 text-primary border border-primary/20 scale-[1.02]' : 'text-slate-800 hover:text-white hover:bg-white/[0.03]'}`}>
+    <div className={`transition-all duration-500 relative z-10 ${active ? 'scale-110 text-primary' : 'group-hover:scale-105 group-hover:text-slate-400'}`}>{icon}</div>
+    <span className={`text-[11px] font-bold uppercase tracking-[0.2em] relative z-10 transition-all ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>{label}</span>
   </button>
 );
 
 const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
   <>
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/98 z-[80] backdrop-blur-[60px]" />
-    <motion.div initial={{ y: '20px', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '20px', opacity: 0 }} className="fixed inset-4 md:inset-10 lg:inset-16 bg-surface border border-white/5 z-[90] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
-      <header className="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-surface">
-        <div className="flex items-center gap-6">
-           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-             <img src="/logo.png" alt="W/M" className="w-8 h-8" />
-           </div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/98 z-[80] backdrop-blur-[120px]" />
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="fixed inset-4 sm:inset-6 md:inset-10 lg:inset-16 bg-surface border border-white/5 z-[90] rounded-[2.5rem] md:rounded-[4rem] flex flex-col overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+      <div className="absolute inset-0 grid-overlay opacity-10 pointer-events-none" />
+      
+      <header className="px-8 md:px-14 py-8 md:py-12 border-b border-white/5 flex flex-wrap gap-6 justify-between items-center bg-surface/[0.01] backdrop-blur-3xl relative z-10">
+        <div className="flex items-center gap-8">
+           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><Sparkles size={28} /></div>
            <div className="space-y-1">
-             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Strategy Studio</h2>
-             <p className="text-[9px] text-primary/50 font-bold uppercase tracking-[0.4em]">Active Node Calibration</p>
+             <h2 className="text-4xl font-black text-white uppercase tracking-tighter italic">Strategy Forge</h2>
+             <div className="text-[10px] text-primary/40 font-bold uppercase tracking-[0.5em] animate-pulse">Neural Pathing Active</div>
            </div>
         </div>
-        <button onClick={onClose} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-slate-500"><X size={24} /></button>
+        <button onClick={onClose} className="p-6 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-slate-700 hover:text-white"><X size={32} /></button>
       </header>
       
-      <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-            {posts.map((post, i) => (
-              <motion.div 
-                key={post.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="glass p-8 border-white/5 hover:border-primary/20 flex flex-col gap-6 shadow-xl transition-all h-full bg-[#0d0d0d]"
-              >
-                <div className="flex justify-between items-start">
-                    <div className="px-4 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-[9px] font-bold uppercase tracking-widest text-primary">
-                      {post.platformTarget} Protocol
-                    </div>
-                    <button onClick={() => onCopy(post.content, post.id)} className={`p-2.5 rounded-xl transition-all ${copiedId === post.id ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-600 hover:text-white bg-white/5'}`}>
-                      {copiedId === post.id ? <Check size={20} /> : <Copy size={20} />}
-                    </button>
-                </div>
-                
-                <div className="flex-1 bg-black/50 p-6 rounded-2xl border border-white/[0.03] flex items-center justify-center text-center shadow-inner">
-                  <p className="text-sm text-slate-400 leading-relaxed font-semibold italic line-clamp-10">"{post.content}"</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-auto">
-                  <button className="py-4 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    Schedule <ArrowRight size={14} />
+      <div className="flex-1 overflow-y-auto p-6 sm:p-10 md:p-14 custom-scrollbar grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-12 auto-rows-fr relative z-10">
+          {posts.map((post, i) => (
+            <motion.div 
+              key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+              className="premium-card flex flex-col gap-10 hover:bg-white/[0.04]"
+            >
+               <div className="flex justify-between items-center">
+                  <div className="px-6 py-2 rounded-xl bg-primary/5 border border-primary/20 text-[10px] font-bold uppercase tracking-[0.3em] text-primary italic">
+                    {post.platformTarget} HUB
+                  </div>
+                  <button onClick={() => onCopy(post.content, post.id)} className={`p-4 rounded-xl transition-all ${copiedId === post.id ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-800 hover:text-white bg-white/5'}`}>
+                    {copiedId === post.id ? <Check size={20} /> : <Copy size={20} />}
                   </button>
-                  <button onClick={() => onEdit(post)} className="py-4 text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all">Refine</button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+               </div>
+               
+               <div className="flex-1 bg-black/60 p-10 rounded-[2.5rem] border border-white/[0.02] flex items-center justify-center text-center shadow-inner group">
+                 <p className="text-xl text-slate-400 leading-relaxed font-semibold italic tracking-tight lowercase first-letter:uppercase">"{post.content}"</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-6 p-1.5 rounded-[2.5rem]">
+                 <button className="btn-primary !px-0 !py-6 rounded-3xl">Transmit</button>
+                 <button onClick={() => onEdit(post)} className="btn-secondary !px-0 !py-6 rounded-3xl !border-white/5">Refine</button>
+               </div>
+            </motion.div>
+          ))}
       </div>
     </motion.div>
   </>
-);
-
-const RefinementModal = ({ post, onClose, setPost, onCommit }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-8">
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/98 backdrop-blur-3xl" />
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass max-w-4xl w-full p-10 md:p-16 relative z-10 shadow-2xl border-white/10">
-      <h3 className="text-4xl font-black text-white uppercase tracking-tight mb-12">Buffer Edit</h3>
-      <textarea 
-        value={post.content} onChange={e => setPost({...post, content: e.target.value})}
-        className="w-full h-[350px] bg-black/60 border-white/10 border rounded-2xl p-8 mb-12 text-slate-200 outline-none text-xl font-medium leading-relaxed custom-scrollbar focus:border-primary/40 transition-all"
-      />
-      <div className="flex gap-6">
-        <button onClick={onClose} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest border border-white/5 rounded-xl text-slate-600 hover:text-white transition-all">Abort</button>
-        <button onClick={onCommit} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl">Commit</button>
-      </div>
-    </motion.div>
-  </div>
-);
-
-const LethalToast = ({ message, type, onOpenStudio }) => (
-  <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="fixed bottom-10 left-1/2 -translate-x-1/2 px-8 py-5 rounded-2xl z-[120] flex items-center gap-6 shadow-2xl bg-[#0a0a0a] border border-white/5">
-    <div className={`w-3 h-3 rounded-full ${type === 'error' ? 'bg-red-500' : 'bg-primary shadow-[0_0_15px_#bef264]'}`} />
-    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white italic">{message}</span>
-    {type !== 'error' && <button onClick={onOpenStudio} className="text-[11px] font-bold uppercase tracking-widest text-primary/70 hover:text-primary transition-colors">Open Studio</button>}
-  </motion.div>
 );
 
 export default Dashboard;

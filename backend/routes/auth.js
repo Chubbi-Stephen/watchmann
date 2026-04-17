@@ -58,13 +58,13 @@ router.post('/login', async (req, res) => {
     }
 
     const token = generateToken(user.id);
-    const profile = await prisma.profile.findUnique({ where: { userId: user.id } });
+    const identities = await prisma.profile.findMany({ where: { userId: user.id } });
 
     res.status(200).json({
       message: 'Login successful.',
       token,
       user: { id: user.id, name: user.name, email: user.email },
-      hasProfile: !!profile,
+      hasProfile: identities.length > 0,
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -85,7 +85,7 @@ router.get('/me', async (req, res) => {
     const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'watchmann_secret_key');
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      include: { profile: true },
+      include: { identities: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found.' });
     const { password, ...safeUser } = user;

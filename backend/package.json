@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.7.0",
-    "@prisma/client": "^7.7.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
@@ -18,10 +17,12 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
+    "openai": "^6.34.0",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
+    "@prisma/client": "^6.2.1",
     "nodemon": "^3.1.4",
-    "prisma": "^7.7.0"
+    "prisma": "^6.2.1"
   }
 }

@@ -10,6 +10,8 @@ import postsRoutes from './routes/posts.js';
 
 dotenv.config();
 
+import analyticsRoutes from './routes/analytics.js';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -24,6 +26,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api/posts', postsRoutes);

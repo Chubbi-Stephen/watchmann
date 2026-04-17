@@ -4,12 +4,12 @@ import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// POST /api/profile/setup - complete onboarding
+// POST /api/profile/setup - Create or update an identity
 router.post('/setup', verifyToken, async (req, res) => {
-  const { identity, targetPlatforms, niche, tone } = req.body;
+  const { identityName, identityRole, targetPlatforms, niche, tone, isActive } = req.body;
 
-  if (!identity || !targetPlatforms || !niche) {
-    return res.status(400).json({ error: 'identity, targetPlatforms, and niche are required.' });
+  if (!identityRole || !targetPlatforms || !niche) {
+    return res.status(400).json({ error: 'identityRole, targetPlatforms, and niche are required.' });
   }
 
   const platformsString = Array.isArray(targetPlatforms)
@@ -17,14 +17,28 @@ router.post('/setup', verifyToken, async (req, res) => {
     : targetPlatforms;
 
   try {
-    const profile = await prisma.profile.upsert({
-      where: { userId: req.userId },
-      update: { identity, targetPlatforms: platformsString, niche, tone },
-      create: { userId: req.userId, identity, targetPlatforms: platformsString, niche, tone },
+    // If setting something to active, deactivate others
+    if (isActive) {
+      await prisma.profile.updateMany({
+        where: { userId: req.userId },
+        data: { isActive: false }
+      });
+    }
+
+    const profile = await prisma.profile.create({
+      data: { 
+        userId: req.userId, 
+        identityName: identityName || 'Main Persona',
+        identityRole, 
+        targetPlatforms: platformsString, 
+        niche, 
+        tone,
+        isActive: isActive !== undefined ? isActive : true
+      },
     });
 
     res.status(200).json({
-      message: 'Profile saved successfully.',
+      message: 'Identity established.',
       profile: {
         ...profile,
         targetPlatforms: profile.targetPlatforms.split(','),
@@ -36,13 +50,17 @@ router.post('/setup', verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/profile - get current user's profile
+// GET /api/profile - get current active identity
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const profile = await prisma.profile.findUnique({ where: { userId: req.userId } });
+    const profile = await prisma.profile.findFirst({ 
+      where: { userId: req.userId, isActive: true } 
+    }) || await prisma.profile.findFirst({ 
+      where: { userId: req.userId } 
+    });
 
     if (!profile) {
-      return res.status(404).json({ error: 'Profile not found. Please complete onboarding.' });
+      return res.status(404).json({ error: 'No active identity found.' });
     }
 
     res.json({
@@ -51,6 +69,16 @@ router.get('/', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/profile/all - list all identities
+router.get('/all', verifyToken, async (req, res) => {
+  try {
+    const identities = await prisma.profile.findMany({ where: { userId: req.userId } });
+    res.json({ identities: identities.map(p => ({ ...p, targetPlatforms: p.targetPlatforms.split(',') })) });
+  } catch (error) {
     res.status(500).json({ error: 'Internal server error.' });
   }
 });

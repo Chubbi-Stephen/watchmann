@@ -1,50 +1,52 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./generated/prisma"
 }
 
-datasource db {
+datasource watchmann_db {
   provider = "sqlite"
+  url = "file:./dev.db"
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
+  id String @id @default(uuid())
+  email String @unique
+  name String?
+  password String
   createdAt DateTime @default(now())
-  profile   Profile?
-  posts     Post[]
+  identities Profile[]
+  posts Post[]
 }
 
 model Profile {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  identity        String   // e.g. "Blogger"
-  targetPlatforms String   // comma-separated list of platforms e.g. "X,LinkedIn"
-  niche           String   // e.g. "Tech"
-  tone            String?  // e.g. "Professional"
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityName String
+  identityRole String
+  targetPlatforms String
+  niche String
+  tone String?
+  isActive Boolean @default(false)
 }
 
 model Trend {
-  id           String   @id @default(uuid())
-  platform     String   // e.g. "X"
-  headline     String
-  description  String?
-  metadata     String?  // JSON stringified metadata
+  id String @id @default(uuid())
+  platform String
+  headline String
+  description String?
   discoveredAt DateTime @default(now())
-  posts        Post[]
+  posts Post[]
 }
 
 model Post {
-  id             String   @id @default(uuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trendId        String?
-  trend          Trend?   @relation(fields: [trendId], references: [id])
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trendId String?
+  trend Trend? @relation(fields: [trendId], references: [id])
   platformTarget String
-  content        String
-  status         String   @default("Draft") // Draft, Published
-  createdAt      DateTime @default(now())
+  content String
+  status String @default("Draft")
+  scheduledFor DateTime?
+  createdAt DateTime @default(now())
 }
