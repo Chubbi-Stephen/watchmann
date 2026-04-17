@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Zap } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 
 const Auth = ({ setUser }) => {
@@ -29,44 +29,59 @@ const Auth = ({ setUser }) => {
         navigate('/onboarding');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Authentication failed');
+      setError(err.response?.data?.error || 'Authentication sequence failed. Check credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClasses = "w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-primary/50 focus:ring-1 focus:ring-primary/30 outline-none transition-all";
+  const inputClasses = "w-full pl-14 pr-6 py-5 bg-white/[0.03] border border-white/10 rounded-2xl focus:border-primary/50 focus:ring-4 focus:ring-primary/5 outline-none transition-all text-white placeholder:text-slate-600 font-medium";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-[#030303] overflow-hidden relative">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
+
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass max-w-md w-full p-10"
+        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="glass max-w-xl w-full p-8 md:p-16 relative z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)]"
       >
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 font-black text-xl text-primary mb-4">
-            <Zap fill="var(--primary)" size={20} /> WATCHMANN
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 font-black text-2xl text-primary mb-6 italic tracking-tighter">
+            <Zap fill="currentColor" size={28} /> WATCHMANN
           </div>
-          <h2 className="text-3xl font-bold mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-          <p className="text-slate-400">{isLogin ? 'Enter your credentials to continue' : 'Join the watch for viral trends'}</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-4 tracking-tight text-white uppercase italic">
+            {isLogin ? 'Access Core' : 'Init System'}
+          </h2>
+          <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">
+            {isLogin ? 'Satellite sync required' : 'Establishing new creator node'}
+          </p>
         </div>
 
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl mb-6 text-sm">
-            {error}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-red-500/10 border border-red-500/20 text-red-500 p-5 rounded-2xl mb-8 text-xs font-black uppercase tracking-widest flex items-center gap-3"
+            >
+              <ShieldCheck size={18} /> {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
-            <div className="space-y-2">
-              <label className="text-sm text-slate-400">Full Name</label>
+            <div className="space-y-2 group">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-focus-within:text-primary transition-colors ml-2">Operator Name</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors" size={20} />
                 <input 
                   type="text" 
-                  placeholder="John Doe"
+                  placeholder="COMMANDER"
                   required
                   className={inputClasses}
                   value={formData.name}
@@ -76,13 +91,13 @@ const Auth = ({ setUser }) => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400">Email Address</label>
+          <div className="space-y-2 group">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-focus-within:text-primary transition-colors ml-2">Satellite Link (Email)</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors" size={20} />
               <input 
                 type="email" 
-                placeholder="name@example.com"
+                placeholder="HQ@WATCHMANN.IO"
                 required
                 className={inputClasses}
                 value={formData.email}
@@ -91,10 +106,10 @@ const Auth = ({ setUser }) => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400">Password</label>
+          <div className="space-y-2 group">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-focus-within:text-primary transition-colors ml-2">Access Key (Password)</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors" size={20} />
               <input 
                 type="password" 
                 placeholder="••••••••"
@@ -106,25 +121,39 @@ const Auth = ({ setUser }) => {
             </div>
           </div>
 
-          <button 
-            disabled={loading} 
-            type="submit" 
-            className="glow-btn w-full flex items-center justify-center gap-2 mt-4"
-          >
-            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')} <ArrowRight size={18} />
-          </button>
+          <div className="pt-6">
+            <button 
+              disabled={loading} 
+              type="submit" 
+              className="glow-btn w-full flex items-center justify-center gap-4 py-6 rounded-3xl text-xs font-black uppercase tracking-[0.3em] shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <span className="relative z-10 flex items-center gap-4">
+                {loading ? 'Processing Sync...' : (isLogin ? 'Establish Link' : 'Register Node')} 
+                {!loading && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
+              </span>
+            </button>
+          </div>
         </form>
 
-        <div className="text-center mt-8 text-sm text-slate-400">
-          {isLogin ? "Don't have an account?" : "Already have an account?"} {' '}
+        <div className="text-center mt-12 space-y-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 italic flex items-center justify-center gap-4">
+            <span className="w-8 h-px bg-white/5"></span>
+            OR
+            <span className="w-8 h-px bg-white/5"></span>
+          </p>
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="text-primary font-bold hover:underline ml-1"
+            className="text-white font-black hover:text-primary transition-all uppercase tracking-widest text-[11px] hover:scale-105"
           >
-            {isLogin ? 'Create one' : 'Sign in'}
+            {isLogin ? 'Execute New Registration' : 'Return to Authorized Login'}
           </button>
         </div>
       </motion.div>
+
+      {/* Floating Sparkles Decor */}
+      <div className="hidden xl:block absolute top-[20%] left-[15%] text-primary/20 blur-[1px]"><Sparkles size={60} /></div>
+      <div className="hidden xl:block absolute bottom-[20%] right-[15%] text-secondary/20 blur-[1px]"><Sparkles size={40} /></div>
     </div>
   );
 };
