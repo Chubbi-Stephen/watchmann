@@ -36,8 +36,8 @@ const Dashboard = ({ user, setUser }) => {
   const [copiedId, setCopiedId] = useState(null);
   const [editingPost, setEditingPost] = useState(null);
   const [toast, setToast] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
+  const [studioTrendId, setStudioTrendId] = useState(null);
 
   const [settingsData, setSettingsData] = useState({
     identity: user?.profile?.identity || '',
@@ -57,7 +57,7 @@ const Dashboard = ({ user, setUser }) => {
       setTrends(trendRes.data.trends);
       setPosts(postRes.data.posts);
     } catch (err) {
-      console.error("Fetch dashboard failed", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,6 +90,7 @@ const Dashboard = ({ user, setUser }) => {
     try {
       await api.post('/posts/generate', { trendId });
       await fetchDashboardData();
+      setStudioTrendId(trendId);
       setStudioOpen(true);
       showToast("Strategy Architected");
     } catch (err) {
@@ -137,18 +138,26 @@ const Dashboard = ({ user, setUser }) => {
     }
   };
 
+  // Filter posts for the specific studio trend if one is active
+  const studioPosts = useMemo(() => {
+    if (studioTrendId) {
+      return posts.filter(p => p.trendId === studioTrendId);
+    }
+    return posts; // Fallback to all drafts if opened normally
+  }, [posts, studioTrendId]);
+
   return (
-    <div className="min-h-screen flex bg-surface text-slate-400 font-inter selection:bg-primary/40 selection:text-black">
+    <div className="min-h-screen flex bg-surface text-slate-400 font-inter selection:bg-primary/40 selection:text-black antialiased">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-72 border-r border-white/5 flex-col p-8 sticky top-0 h-screen z-40 bg-surface">
         <div className="flex items-center gap-3 font-extrabold text-2xl text-primary mb-16 tracking-tighter">
-          <Zap fill="currentColor" size={24} className="shrink-0" /> 
+          <Zap fill="currentColor" size={24} /> 
           <span>Watchmann</span>
         </div>
         
         <nav className="flex-1 space-y-3">
           <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <SidebarItem icon={<Sparkles size={20} />} label="Studio" active={studioOpen} onClick={() => setStudioOpen(true)} />
+          <SidebarItem icon={<Sparkles size={20} />} label="Studio" active={studioOpen} onClick={() => { setStudioTrendId(null); setStudioOpen(true); }} />
           <SidebarItem icon={<History size={20} />} label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} />
           <SidebarItem icon={<Settings size={20} />} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
         </nav>
@@ -159,7 +168,7 @@ const Dashboard = ({ user, setUser }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-12 lg:p-20 xl:p-24 max-w-[1500px] mx-auto w-full pt-32 lg:pt-28 min-h-screen relative">
+      <main className="flex-1 p-6 md:p-12 lg:p-20 xl:p-24 max-w-[1500px] mx-auto w-full pt-32 lg:pt-28 min-h-screen relative overflow-x-hidden">
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
             <motion.div key="dash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-20">
@@ -189,11 +198,11 @@ const Dashboard = ({ user, setUser }) => {
             <motion.div key="archive" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-20">
               <header className="space-y-4">
                 <h1 className="text-7xl font-black text-white tracking-tighter">Vault <span className="text-slate-700 italic">History</span></h1>
-                <p className="text-slate-500 font-medium uppercase tracking-[0.2em] text-xs">A comprehensive log of all strategized nodes.</p>
+                <p className="text-slate-500 font-medium uppercase tracking-[0.2em] text-xs">A logs of all historical generation nodes.</p>
               </header>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {archivePosts.map((post, idx) => (
-                  <motion.div key={post.id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.03 }} className="glass p-8 border-white/5 hover:border-primary/20 transition-all flex flex-col gap-6">
+                  <motion.div key={post.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }} className="glass p-8 border-white/5 hover:border-primary/20 transition-all flex flex-col gap-6">
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{post.platformTarget}</span>
                       <button onClick={() => copyToClipboard(post.content, post.id)} className="p-2 text-slate-600 hover:text-white transition-all transform hover:scale-110">
@@ -209,7 +218,7 @@ const Dashboard = ({ user, setUser }) => {
           )}
 
           {activeTab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-3xl space-y-20">
+            <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-3xl space-y-24">
               <header className="space-y-4">
                 <h1 className="text-7xl font-black text-white tracking-tighter italic">Calibration</h1>
                 <p className="text-slate-500 font-medium uppercase tracking-[0.2em] text-xs">Define your operational parameters.</p>
@@ -225,7 +234,7 @@ const Dashboard = ({ user, setUser }) => {
                     <input value={settingsData.niche} onChange={e => setSettingsData({...settingsData, niche: e.target.value})} className="settings-input" />
                   </div>
                   <div className="space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Output Tone</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Transmission Tone</label>
                     <input value={settingsData.tone} onChange={e => setSettingsData({...settingsData, tone: e.target.value})} className="settings-input" />
                   </div>
                 </div>
@@ -238,13 +247,23 @@ const Dashboard = ({ user, setUser }) => {
         </AnimatePresence>
       </main>
 
-      {/* Global Persistence Elements */}
-      <AnimatePresence>{studioOpen && <StudioPopUp posts={posts} onClose={() => setStudioOpen(false)} onCopy={copyToClipboard} copiedId={copiedId} onEdit={setEditingPost} />}</AnimatePresence>
+      {/* Pop-ups & Toasts */}
+      <AnimatePresence>
+        {studioOpen && (
+          <StudioPopUp 
+            posts={studioPosts} 
+            onClose={() => { setStudioOpen(false); setStudioTrendId(null); }} 
+            onCopy={copyToClipboard} 
+            copiedId={copiedId} 
+            onEdit={setEditingPost} 
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>{editingPost && <RefinementModal post={editingPost} onClose={() => setEditingPost(null)} setPost={setEditingPost} onCommit={handleUpdatePost} />}</AnimatePresence>
       <AnimatePresence>{toast && <LethalToast message={toast.message} type={toast.type} onOpenStudio={() => setStudioOpen(true)} />}</AnimatePresence>
 
       <style>{`
-        .settings-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1rem 1.5rem; font-size: 1rem; font-weight: 600; color: white; border-radius: 1rem; outline: none; transition: all 0.3s; }
+        .settings-input { width: 100%; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; font-size: 1rem; font-weight: 600; color: white; border-radius: 1rem; outline: none; transition: all 0.3s; }
         .settings-input:focus { border-color: #bef264; background: rgba(190,242,100,0.02); }
       `}</style>
     </div>
@@ -256,8 +275,8 @@ const TrendCard = ({ trend, idx, generating, onGenerate }) => {
   const polylinePoints = points.map((p, i) => `${i * 15},${50 - p}`).join(' ');
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="glass p-10 group relative border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden">
-      <div className="absolute top-0 right-0 w-40 h-full opacity-[0.05] pointer-events-none group-hover:opacity-10 transition-opacity">
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }} className="glass p-10 group relative border-white/5 hover:border-primary/20 transition-all duration-500">
+      <div className="absolute top-0 right-0 w-40 h-full opacity-[0.03] pointer-events-none transition-opacity">
         <svg viewBox="0 0 165 50" className="w-full h-full"><polyline fill="none" stroke="#bef264" strokeWidth="2" points={polylinePoints} /></svg>
       </div>
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -270,7 +289,7 @@ const TrendCard = ({ trend, idx, generating, onGenerate }) => {
           <p className="text-slate-500 font-medium text-lg leading-relaxed max-w-3xl">{trend.description}</p>
         </div>
         <button disabled={generating === trend.id} onClick={() => onGenerate(trend.id)} className="glow-btn px-10 py-5 text-[10px] font-bold uppercase tracking-widest flex items-center gap-3">
-          {generating === trend.id ? 'Analyzing...' : 'Generate Strategy'} <Zap size={16} fill="currentColor" />
+          {generating === trend.id ? 'Analyzing...' : 'Execute Strategy'} <Zap size={16} fill="currentColor" />
         </button>
       </div>
     </motion.div>
@@ -278,8 +297,8 @@ const TrendCard = ({ trend, idx, generating, onGenerate }) => {
 };
 
 const SidebarItem = ({ icon, label, active = false, onClick }) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${active ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-600 hover:text-white'}`}>
-    <div className={`transition-all duration-500 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>{icon}</div>
+  <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${active ? 'bg-primary/10 text-primary border border-primary/20 shadow-inner' : 'text-slate-600 hover:text-white'}`}>
+    <div className={`transition-all duration-500 ${active ? 'scale-110 text-primary' : 'group-hover:scale-105'}`}>{icon}</div>
     <span className={`text-[11px] font-bold uppercase tracking-widest ${active ? 'opacity-100' : 'opacity-60'}`}>{label}</span>
   </button>
 );
@@ -287,45 +306,54 @@ const SidebarItem = ({ icon, label, active = false, onClick }) => (
 const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
   <>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/98 z-[80] backdrop-blur-[60px]" />
-    <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 40, stiffness: 400 }} className="fixed inset-4 md:inset-12 lg:inset-20 bg-surface border border-white/5 z-[90] rounded-[3rem] flex flex-col overflow-hidden shadow-[0_0_150px_rgba(0,0,0,1)]">
-      <header className="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-surface/80">
+    <motion.div initial={{ y: '20px', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '20px', opacity: 0 }} className="fixed inset-4 md:inset-10 lg:inset-16 bg-surface border border-white/5 z-[90] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
+      <header className="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-surface">
         <div className="flex items-center gap-6">
-           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-[0_0_30px_rgba(190,242,100,0.1)]"><Sparkles size={24} /></div>
+           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><Sparkles size={24} /></div>
            <div className="space-y-1">
              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Strategy Studio</h2>
-             <p className="text-[9px] text-primary/50 font-bold uppercase tracking-[0.4em]">Neural Output Calibration Hub</p>
+             <p className="text-[9px] text-primary/50 font-bold uppercase tracking-[0.4em]">Active Node Calibration</p>
            </div>
         </div>
         <button onClick={onClose} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-slate-500"><X size={24} /></button>
       </header>
       
-      <div className="flex-1 overflow-y-auto p-10 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-          {posts.map((post, i) => (
-            <motion.div 
-              key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="glass p-8 border-white/5 hover:border-primary/20 flex flex-col gap-6 shadow-2xl transition-all h-full bg-white/[0.01]"
-            >
-               <div className="flex justify-between items-start">
-                  <div className="px-4 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-[9px] font-bold uppercase tracking-widest text-primary">
-                    {post.platformTarget} Protocol
-                  </div>
-                  <button onClick={() => onCopy(post.content, post.id)} className={`p-2.5 rounded-xl transition-all ${copiedId === post.id ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-600 hover:text-white'}`}>
-                    {copiedId === post.id ? <Check size={20} /> : <Copy size={20} />}
-                  </button>
-               </div>
-               
-               <div className="flex-1 bg-black/40 p-6 rounded-2xl border border-white/[0.03] flex items-center justify-center text-center">
-                 <p className="text-sm text-slate-400 leading-relaxed font-semibold italic line-clamp-8">"{post.content}"</p>
-               </div>
+      {/* GRID OVERHAUL FOR VISUAL CONSISTENCY */}
+      <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            {posts.map((post, i) => (
+              <motion.div 
+                key={post.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="glass p-8 border-white/5 hover:border-primary/20 flex flex-col gap-6 shadow-xl transition-all h-full bg-[#0d0d0d]"
+              >
+                <div className="flex justify-between items-start">
+                    <div className="px-4 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-[9px] font-bold uppercase tracking-widest text-primary">
+                      {post.platformTarget} Protocol
+                    </div>
+                    <button onClick={() => onCopy(post.content, post.id)} className={`p-2.5 rounded-xl transition-all ${copiedId === post.id ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-600 hover:text-white bg-white/5'}`}>
+                      {copiedId === post.id ? <Check size={20} /> : <Copy size={20} />}
+                    </button>
+                </div>
+                
+                <div className="flex-1 bg-black/50 p-6 rounded-2xl border border-white/[0.03] flex items-center justify-center text-center shadow-inner">
+                  <p className="text-sm text-slate-400 leading-relaxed font-semibold italic line-clamp-10">"{post.content}"</p>
+                </div>
 
-               <div className="grid grid-cols-2 gap-4">
-                 <button className="py-4 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
-                   Schedule <ArrowRight size={14} />
-                 </button>
-                 <button onClick={() => onEdit(post)} className="py-4 text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all">Refine</button>
-               </div>
-            </motion.div>
-          ))}
+                <div className="grid grid-cols-2 gap-4 mt-auto">
+                  <button className="py-4 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    Schedule <ArrowRight size={14} />
+                  </button>
+                  <button onClick={() => onEdit(post)} className="py-4 text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all">Refine</button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          {posts.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-slate-700 font-bold uppercase tracking-widest text-xs py-40">
+              <Zap size={48} className="mb-6 opacity-20" />
+              Empty Satellite Hub
+            </div>
+          )}
       </div>
     </motion.div>
   </>
@@ -333,16 +361,16 @@ const StudioPopUp = ({ posts, onClose, onCopy, copiedId, onEdit }) => (
 
 const RefinementModal = ({ post, onClose, setPost, onCommit }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-8">
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/98 backdrop-blur-2xl" />
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass max-w-4xl w-full p-10 md:p-16 relative z-10 shadow-2xl border-primary/10">
-      <h3 className="text-4xl font-black text-white uppercase tracking-tight mb-12 italic underline decoration-primary decoration-4 underline-offset-8">Input Buffer Control</h3>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/98 backdrop-blur-3xl" />
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass max-w-4xl w-full p-10 md:p-16 relative z-10 shadow-2xl border-white/10">
+      <h3 className="text-4xl font-black text-white uppercase tracking-tight mb-12">Buffer Edit</h3>
       <textarea 
         value={post.content} onChange={e => setPost({...post, content: e.target.value})}
-        className="w-full h-[350px] bg-black/60 border-white/5 border rounded-2xl p-8 mb-12 text-slate-200 outline-none text-xl font-medium leading-relaxed custom-scrollbar focus:border-primary/40 transition-all font-inter"
+        className="w-full h-[350px] bg-black/60 border-white/10 border rounded-2xl p-8 mb-12 text-slate-200 outline-none text-xl font-medium leading-relaxed custom-scrollbar focus:border-primary/40 transition-all"
       />
-      <div className="flex flex-col sm:flex-row gap-6">
-        <button onClick={onClose} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-xl text-slate-600 hover:text-red-500 transition-all">Abort</button>
-        <button onClick={onCommit} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl shadow-[0_0_40px_rgba(190,242,100,0.2)] hover:scale-105 active:scale-95 transition-all">Verify Node</button>
+      <div className="flex gap-6">
+        <button onClick={onClose} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest border border-white/5 rounded-xl text-slate-600 hover:text-white transition-all">Abort</button>
+        <button onClick={onCommit} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest bg-primary text-black rounded-xl">Commit</button>
       </div>
     </motion.div>
   </div>
