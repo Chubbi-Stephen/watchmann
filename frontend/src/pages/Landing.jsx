@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, TrendingUp, Zap, ArrowRight, ShieldCheck, Cpu, Globe, Infinity as InfinityIcon, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
